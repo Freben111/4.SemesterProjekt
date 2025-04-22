@@ -1,0 +1,21 @@
+@ApiGatewayUrl = "https://localhost:7143"
+@ForumURL = "https://localhost:3502"
+
+
+### Direct Pizza Order Endpoint (for testing)
+POST {{{{ApiGatewayUrl}}}}/forum
+Content-Type: application/json
+
+{
+    "Name": "sejtForum",
+    "Description": "Det er et sejt forum",
+}
+
+### Direct Pizza Order Endpoint (for testing)
+POST {{ApiGatewayUrl}}/api/Forum
+Content-Type: application/json
+
+{
+    "name": "sejtForum",
+    "description": "Det er et sejt forum"
+}
