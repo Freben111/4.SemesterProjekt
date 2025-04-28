@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0" />
 
@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\4.SemesterProjekt\APIGateway.csproj" />
     <ProjectReference Include="..\ForumService.API\ForumService.API.csproj" />
+    <ProjectReference Include="..\PostService.API\PostService.API.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,27 +1,27 @@
 ﻿using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Forum.DTO_s;
+using Shared.Post.DTO_s;
 
 namespace APIGateway.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ForumController : ControllerBase
+    public class PostController : ControllerBase
     {
         private readonly DaprClient _dapr;
 
-        public ForumController(DaprClient dapr)
+        public PostController(DaprClient dapr)
         {
             _dapr = dapr;
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateForum([FromBody] CreateForumDTO dto)
+        public async Task<IActionResult> CreatePost([FromBody] CreatePostDTO dto)
         {
-            var result = await _dapr.InvokeMethodAsync<CreateForumDTO, object>(
+            var result = await _dapr.InvokeMethodAsync<CreatePostDTO, object>(
                 HttpMethod.Post,
-                "forumservice",     
-                "api/forum",        
+                "postservice",
+                "api/post",
                 dto
             );
 
@@ -29,47 +29,47 @@ namespace APIGateway.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetForum(Guid id)
+        public async Task<IActionResult> GetPost(Guid id)
         {
             var result = await _dapr.InvokeMethodAsync<object>(
                 HttpMethod.Get,
-                "forumservice",
-                $"api/forum/{id}"
+                "postservice",
+                $"api/post/{id}"
             );
 
             return Ok(result);
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllForums()
+        public async Task<IActionResult> GetAllPosts()
         {
             var result = await _dapr.InvokeMethodAsync<object[]>(
                 HttpMethod.Get,
-                "forumservice",
-                "api/forum"
+                "postservice",
+                "api/post"
             );
             return Ok(result);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateForum(Guid id, [FromBody] UpdateForumDTO dto)
+        public async Task<IActionResult> UpdatePost(Guid id, [FromBody] UpdatePostDTO dto)
         {
-            var result = await _dapr.InvokeMethodAsync<UpdateForumDTO, object>(
+            var result = await _dapr.InvokeMethodAsync<UpdatePostDTO, object>(
                 HttpMethod.Put,
-                "forumservice",
-                $"api/forum/{id}",
+                "postservice",
+                $"api/post/{id}",
                 dto
             );
             return Ok(result);
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteForum(Guid id)
+        public async Task<IActionResult> DeletePost(Guid id)
         {
             var result = await _dapr.InvokeMethodAsync<object>(
                 HttpMethod.Delete,
-                "forumservice",
-                $"api/forum/{id}"
+                "postservice",
+                $"api/post/{id}"
             );
             return Ok(result);
         }

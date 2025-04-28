@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ForumService.Application.ServiceDTO
+namespace Shared.Forum.DTO_s
 {
-    public class CreateForumDTO
+    public class UpdateForumDTO
     {
         public string Name { get; set; }
         public string Description { get; set; }

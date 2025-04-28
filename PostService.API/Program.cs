@@ -1,8 +1,8 @@
 using Dapr;
 using Dapr.Client;
-using ForumService.Application;
-using ForumService.Application.Interfaces;
-using ForumService.Infrastructure;
+using PostService.Application;
+using PostService.Application.Interfaces;
+using PostService.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

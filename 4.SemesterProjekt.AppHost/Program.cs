@@ -23,4 +23,13 @@ builder.AddProject<Projects.ForumService_API>("forumservice-api")
 
 
 
+builder.AddProject<Projects.PostService_API>("postservice-api")
+    .WithDaprSidecar(new DaprSidecarOptions
+    {
+        AppId = "postservice",
+        DaprHttpPort = 3503,
+    });
+
+
+
 builder.Build().Run();

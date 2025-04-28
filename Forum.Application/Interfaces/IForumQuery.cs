@@ -1,5 +1,6 @@
-﻿using ForumService.Application.ServiceDTO;
+﻿
 using Shared.Forum;
+using Shared.Forum.DTO_s;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +9,10 @@ using System.Threading.Tasks;
 
 namespace ForumService.Application.Interfaces
 {
-    public interface IForumApplication
+    public interface IForumQuery
     {
+        Task<ForumDTO> GetForum(Guid Id);
 
-        Task<ForumResultMessage> CreateForum(CreateForumDTO dto);
+        Task<IEnumerable<ForumDTO>> GetAllForums();
     }
 }

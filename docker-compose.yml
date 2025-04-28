@@ -1,18 +1,61 @@
 version: '3.9'
 
 services:
-  postgres:
+  forum_postgres:
     image: postgres:16
     container_name: forum_postgres
     restart: always
     environment:
       POSTGRES_USER: forum_user
-      POSTGRES_PASSWORD: strongpassword123
+      POSTGRES_PASSWORD: ForumPassword
       POSTGRES_DB: forum_db
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - forum_data:/var/lib/postgresql/data
+
+  post_postgres:
+    image: postgres:16
+    container_name: post_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: post_user
+      POSTGRES_PASSWORD: PostPassword
+      POSTGRES_DB: post_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - post_data:/var/lib/postgresql/data
+
+  comment_postgres:
+    image: postgres:16
+    container_name: comment_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: comment_user
+      POSTGRES_PASSWORD: CommentPassword
+      POSTGRES_DB: comment_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - comment_data:/var/lib/postgresql/data
+
+
+  user_postgres:
+    image: postgres:16
+    container_name: user_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: user_user
+      POSTGRES_PASSWORD: UserPassword
+      POSTGRES_DB: user_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - user_data:/var/lib/postgresql/data
 
 volumes:
-  postgres_data:
+  forum_data:
+  post_data:  
+  comment_data:
+  user_data:

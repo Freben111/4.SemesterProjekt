@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -28,6 +28,8 @@
     <ProjectReference Include="..\4.SemesterProjekt.ServiceDefaults\4.SemesterProjekt.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Forum.Application\ForumService.Application.csproj" />
     <ProjectReference Include="..\Forum.Infrastructure\ForumService.Infrastructure.csproj" />
+    <ProjectReference Include="..\PostService.Application\PostService.Application.csproj" />
+    <ProjectReference Include="..\PostService.Infrastructure\PostService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
