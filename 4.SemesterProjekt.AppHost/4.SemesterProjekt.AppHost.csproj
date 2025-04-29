@@ -18,8 +18,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\4.SemesterProjekt\APIGateway.csproj" />
+    <ProjectReference Include="..\CommentService.API\CommentService.API.csproj" />
     <ProjectReference Include="..\ForumService.API\ForumService.API.csproj" />
     <ProjectReference Include="..\PostService.API\PostService.API.csproj" />
+    <ProjectReference Include="..\User.API\User.API.csproj" />
   </ItemGroup>
 
 </Project>

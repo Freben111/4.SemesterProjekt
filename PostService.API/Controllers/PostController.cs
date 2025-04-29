@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Shared.Post.DTO_s;
 
-namespace ForumService.API.Controllers
+namespace PostService.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
