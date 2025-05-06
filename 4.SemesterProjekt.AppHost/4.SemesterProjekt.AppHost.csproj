@@ -21,7 +21,7 @@
     <ProjectReference Include="..\CommentService.API\CommentService.API.csproj" />
     <ProjectReference Include="..\ForumService.API\ForumService.API.csproj" />
     <ProjectReference Include="..\PostService.API\PostService.API.csproj" />
-    <ProjectReference Include="..\User.API\User.API.csproj" />
+    <ProjectReference Include="..\User.API\UserService.API.csproj" />
   </ItemGroup>
 
 </Project>

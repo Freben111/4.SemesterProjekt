@@ -16,6 +16,8 @@ namespace ForumService.Domain
         public DateTime UpdatedAt { get; protected set; }
         [Timestamp]
         public uint RowVersion { get; protected set; }
+        public Guid OwnerId { get; protected set; }
+        public List<Guid>? ModeratorIds { get; protected set; }
 
 
 
@@ -28,7 +30,7 @@ namespace ForumService.Domain
 
 
 
-        public static Forum CreateForum(string name, string description)
+        public static Forum CreateForum(string name, string description, Guid userId)
         {
             return new Forum
             {
@@ -36,7 +38,8 @@ namespace ForumService.Domain
                 Name = name,
                 Description = description,
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow,
+                OwnerId = userId,
             };
         }
 

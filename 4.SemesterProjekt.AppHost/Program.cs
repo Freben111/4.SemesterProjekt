@@ -41,7 +41,12 @@ builder.AddProject<Projects.CommentService_API>("commentservice-api")
 
 
 
-builder.AddProject<Projects.User_API>("user-api");
+builder.AddProject<Projects.UserService_API>("user-api")
+    .WithDaprSidecar(new DaprSidecarOptions
+    {
+        AppId = "userservice",
+        DaprHttpPort = 3505,
+    });
 
 
 

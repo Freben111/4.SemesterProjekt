@@ -1,7 +1,6 @@
-﻿using PostService.Application.Interfaces;
+﻿using UserService.Application.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using PostService.Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -9,17 +8,17 @@ using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using PostService.Infrastructure;
+using UserService.Infrastructure;
 
-namespace PostService.Infrastructure
+namespace UserService.Infrastructure
 {
     public class UnitOfWork : IUnitOfWork
     {
-        private readonly PostDbContext _db;
+        private readonly UserDbContext _db;
         private DbTransaction _transaction;
         private bool _isCommitted;
 
-        public UnitOfWork(PostDbContext db)
+        public UnitOfWork(UserDbContext db)
         {
             _db = db;
             _isCommitted = false;

@@ -22,7 +22,7 @@ namespace ForumService.Application
             _unitOfWork = unitOfWork;
         }
 
-        async Task<ForumResultMessage> IForumCommand.CreateForum(CreateForumDTO dto)
+        async Task<ForumResultMessage> IForumCommand.CreateForum(CreateForumDTO dto, Guid userId)
         {
             var result = new ForumResultMessage
             {
@@ -39,7 +39,7 @@ namespace ForumService.Application
                     throw new Exception("Forum already exists");
                 }
 
-                var forum = Forum.CreateForum(dto.Name, dto.Description);
+                var forum = Forum.CreateForum(dto.Name, dto.Description, userId);
 
                 await _forumRepository.CreateForum(forum);
                 await _unitOfWork.CommitAsync();
@@ -62,7 +62,7 @@ namespace ForumService.Application
         }
 
 
-        async Task<ForumResultMessage> IForumCommand.UpdateForum(Guid forumId, UpdateForumDTO dto)
+        async Task<ForumResultMessage> IForumCommand.UpdateForum(Guid forumId, UpdateForumDTO dto, Guid userId)
         {
             var result = new ForumResultMessage
             {
@@ -77,6 +77,10 @@ namespace ForumService.Application
                 if (forum == null)
                 {
                     throw new Exception("Forum not found");
+                }
+                if (forum.OwnerId != userId || !forum.ModeratorIds.Contains(userId))
+                {
+                    throw new Exception("User not authorized to update this forum");
                 }
                 forum.UpdateForum(dto.Name, dto.Description);
                 await _forumRepository.UpdateForum(forum, forum.RowVersion);
@@ -98,7 +102,7 @@ namespace ForumService.Application
             }
         }
 
-        async Task<ForumResultMessage> IForumCommand.DeleteForum(Guid forumId)
+        async Task<ForumResultMessage> IForumCommand.DeleteForum(Guid forumId, Guid userId)
         {
             var result = new ForumResultMessage
             {
@@ -113,6 +117,10 @@ namespace ForumService.Application
                 if (forum == null)
                 {
                     throw new Exception("Forum not found");
+                }
+                if (forum.OwnerId != userId)
+                {
+                    throw new Exception("User not authorized to delete this forum");
                 }
 
                 await _forumRepository.DeleteForum(forum, forum.RowVersion);

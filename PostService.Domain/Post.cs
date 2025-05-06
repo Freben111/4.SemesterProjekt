@@ -17,6 +17,7 @@ namespace PostService.Domain
         [Timestamp]
         public uint RowVersion { get; protected set; }
         public Guid ForumId { get; protected set; }
+        public Guid AuthorId { get; protected set; }
 
 
 

@@ -1,10 +1,12 @@
 ﻿using Dapr.Client;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Forum.DTO_s;
 
 namespace APIGateway.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class ForumController : ControllerBase
     {
@@ -29,6 +31,7 @@ namespace APIGateway.Controllers
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetForum(Guid id)
         {
             var result = await _dapr.InvokeMethodAsync<object>(
@@ -41,6 +44,7 @@ namespace APIGateway.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllForums()
         {
             var result = await _dapr.InvokeMethodAsync<object[]>(

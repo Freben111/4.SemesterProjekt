@@ -1,29 +1,29 @@
-﻿using PostService.Application.Interfaces;
-using PostService.Domain.Interfaces;
-using PostService.Infrastructure.Database;
+﻿using UserService.Application.Interfaces;
+using UserService.Domain.Interfaces;
+using UserService.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using PostService.Infrastructure;
-using PostService.Application.Interfaces;
+using UserService.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PostService.Infrastructure
+namespace UserService.Infrastructure
 {
     public static class InfrastructureDependencies
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
         {
-            services.AddDbContext<PostDbContext>(options =>
-                options.UseNpgsql(config.GetConnectionString("PostDatabase")));
+            services.AddDbContext<UserDbContext>(options =>
+                options.UseNpgsql(config.GetConnectionString("UserDatabase")));
 
-            services.AddScoped<IPostRepository, PostRepository>();
-            services.AddScoped<IPostQuery, PostQuery>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IUserQuery, UserQuery>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IPasswordHasher, PasswordHasher>();
 
             return services;
         }

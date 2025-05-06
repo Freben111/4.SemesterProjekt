@@ -11,10 +11,10 @@ namespace ForumService.Application.Interfaces
     public interface IForumCommand
     {
 
-        Task<ForumResultMessage> CreateForum(CreateForumDTO dto);
+        Task<ForumResultMessage> CreateForum(CreateForumDTO dto, Guid userId);
 
-        Task<ForumResultMessage> UpdateForum(Guid forumId, UpdateForumDTO dto);
+        Task<ForumResultMessage> UpdateForum(Guid forumId, UpdateForumDTO dto, Guid userId);
 
-        Task<ForumResultMessage> DeleteForum(Guid forumId);
+        Task<ForumResultMessage> DeleteForum(Guid forumId, Guid userId);
     }
 }
