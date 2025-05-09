@@ -1,11 +1,11 @@
 ﻿using Dapr.Client;
+using Microsoft.Extensions.Logging;
 using PostService.Application.Interfaces;
 using PostService.Domain;
 using PostService.Domain.Interfaces;
-using Microsoft.Extensions.Logging;
-using PostService.Application.Interfaces;
 using Shared.Post;
 using Shared.Post.DTO_s;
+using static Google.Rpc.Context.AttributeContext.Types;
 
 namespace PostService.Application
 {
@@ -15,15 +15,17 @@ namespace PostService.Application
         private readonly ILogger<PostCommand> _logger;
         private readonly IPostRepository _postRepository;
         private readonly IUnitOfWork _unitOfWork;
-        public PostCommand(DaprClient daprClient, ILogger<PostCommand> logger, IPostRepository postRepository, IUnitOfWork unitOfWork)
+        private readonly IPostStateModelCommand _postStateModel;
+        public PostCommand(DaprClient daprClient, ILogger<PostCommand> logger, IPostRepository postRepository, IUnitOfWork unitOfWork, IPostStateModelCommand postStateModel)
         {
             _daprClient = daprClient;
             _logger = logger;
             _postRepository = postRepository;
             _unitOfWork = unitOfWork;
+            _postStateModel = postStateModel;
         }
 
-        async Task<PostResultMessage> IPostCommand.CreatePost(CreatePostDTO dto)
+        async Task<PostResultMessage> IPostCommand.CreatePost(CreatePostDTO dto, Guid userId)
         {
             var result = new PostResultMessage
             {
@@ -34,22 +36,22 @@ namespace PostService.Application
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                var existingPost = _daprClient.GetStateAsync<PostResultMessage>("statestore", dto.Title).Result;
-                if (existingPost != null)
-                {
-                    throw new Exception("Post already exists");
-                }
-
-                var post = Post.CreatePost(dto.Title, dto.Content, dto.ForumId);
+                var post = Post.CreatePost(dto.Title, dto.Content, dto.ForumId, userId);
 
                 await _postRepository.CreatePost(post);
                 await _unitOfWork.CommitAsync();
 
-                await _daprClient.SaveStateAsync("statestore", post.Id.ToString(), post);
+                var postState = _postStateModel.Create(post);
+                await _daprClient.SaveStateAsync("statestore", post.Id.ToString(), postState);
+
+
+                result.PostId = post.Id.ToString();
+                result.PostName = dto.Title;
+                result.AuthorId = userId.ToString();
+                result.Status = "Created";
+                result.StatusCode = 201;
 
                 _logger.LogInformation("Post {PostName} created successfully", dto.Title);
-                result.PostId = post.Id.ToString();
-                result.Status = "Created";
                 return result;
             }
             catch (Exception ex)
@@ -63,7 +65,7 @@ namespace PostService.Application
         }
 
 
-        async Task<PostResultMessage> IPostCommand.UpdatePost(Guid postId, UpdatePostDTO dto)
+        async Task<PostResultMessage> IPostCommand.UpdatePost(Guid postId, UpdatePostDTO dto, Guid authId)
         {
             var result = new PostResultMessage
             {
@@ -77,15 +79,27 @@ namespace PostService.Application
                 var post = await _postRepository.GetPostById(postId);
                 if (post == null)
                 {
+                    result.StatusCode = 404;
                     throw new Exception("Post not found");
+                }
+                if (post.AuthorId != authId)
+                {
+                    result.StatusCode = 403;
+                    throw new Exception("You are not authorized to update this user");
                 }
                 post.UpdatePost(dto.Title, dto.Content);
                 await _postRepository.UpdatePost(post, post.RowVersion);
                 await _unitOfWork.CommitAsync();
 
-                await _daprClient.SaveStateAsync("statestore", post.Title, post);
+                var postState = _postStateModel.Create(post);
+                await _daprClient.SaveStateAsync("statestore", post.Id.ToString(), postState);
 
+                result.PostId = post.Id.ToString();
+                result.PostName = dto.Title;
+                result.AuthorId = authId.ToString();
                 result.Status = "Updated";
+                result.StatusCode = 200;
+
                 _logger.LogInformation("Post {PostId} updated successfully", postId);
                 return result;
             }
@@ -99,7 +113,7 @@ namespace PostService.Application
             }
         }
 
-        async Task<PostResultMessage> IPostCommand.DeletePost(Guid postId)
+        async Task<PostResultMessage> IPostCommand.DeletePost(Guid postId, Guid authId)
         {
             var result = new PostResultMessage
             {
@@ -113,20 +127,28 @@ namespace PostService.Application
                 var post = await _postRepository.GetPostById(postId);
                 if (post == null)
                 {
+                    result.StatusCode = 404;
                     throw new Exception("Post not found");
+                }
+                if (post.AuthorId != authId)
+                {
+                    result.StatusCode = 403;
+                    throw new Exception("You are not authorized to update this user");
                 }
 
                 await _postRepository.DeletePost(post, post.RowVersion);
                 await _unitOfWork.CommitAsync();
 
-                var cachedPost = await _daprClient.GetStateAsync<Post>("statestore", postId.ToString());
-                if (cachedPost != null)
-                {
-                    await _daprClient.DeleteStateAsync("statestore", postId.ToString());
-                }
+                await _daprClient.DeleteStateAsync("statestore", postId.ToString());
+
+
+                result.PostId = post.Id.ToString();
+                result.PostName = post.Title;
+                result.AuthorId = authId.ToString();
+                result.Status = "Deleted";
+                result.StatusCode = 200;
 
                 _logger.LogInformation("Post {PostId} deleted successfully", postId);
-                result.Status = "Deleted";
                 return result;
 
             }

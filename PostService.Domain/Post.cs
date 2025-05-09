@@ -30,7 +30,7 @@ namespace PostService.Domain
 
 
 
-        public static Post CreatePost(string title, string content, string forumId)
+        public static Post CreatePost(string title, string content, string forumId, Guid authorId)
         {
             return new Post
             {
@@ -39,7 +39,8 @@ namespace PostService.Domain
                 Content = content,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
-                ForumId = Guid.Parse(forumId)
+                ForumId = Guid.Parse(forumId),
+                AuthorId = authorId
             };
         }
 

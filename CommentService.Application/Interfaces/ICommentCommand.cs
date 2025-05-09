@@ -11,10 +11,10 @@ namespace CommentService.Application.Interfaces
     public interface ICommentCommand
     {
 
-        Task<CommentResultMessage> CreateComment(CreateCommentDTO dto);
+        Task<CommentResultMessage> CreateComment(CreateCommentDTO dto, Guid authId);
 
-        Task<CommentResultMessage> UpdateComment(Guid forumId, UpdateCommentDTO dto);
+        Task<CommentResultMessage> UpdateComment(Guid forumId, UpdateCommentDTO dto, Guid authId);
 
-        Task<CommentResultMessage> DeleteComment(Guid forumId);
+        Task<CommentResultMessage> DeleteComment(Guid forumId, Guid authId);
     }
 }

@@ -17,7 +17,7 @@ namespace CommentService.Domain
         public uint RowVersion { get; protected set; }
         public Guid? PostId { get; protected set; }
 
-        public Guid? UserId { get; protected set; }
+        public Guid? AuthorId { get; protected set; }
 
 
 
@@ -30,7 +30,7 @@ namespace CommentService.Domain
 
 
 
-        public static Comment CreateComment(string content, string postId, string userId)
+        public static Comment CreateComment(string content, string postId, Guid authId)
         {
             return new Comment
             {
@@ -39,7 +39,7 @@ namespace CommentService.Domain
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 PostId = Guid.Parse(postId),
-                UserId = Guid.Parse(userId)
+                AuthorId = authId
             };
         }
 

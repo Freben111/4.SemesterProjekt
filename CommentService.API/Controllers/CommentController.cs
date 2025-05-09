@@ -1,10 +1,12 @@
 ﻿using CommentService.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Comment.DTO_s;
 
 namespace CommentService.API.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class CommentController : ControllerBase
     {
@@ -26,12 +28,26 @@ namespace CommentService.API.Controllers
         {
 
             _logger.LogInformation("Creating comment on post: {PostId}", dto.PostId);
-            var result = await _commentCommand.CreateComment(dto);
-            return Ok(result);
+            var userIdClaim = User.FindFirst("userId");
+            if (userIdClaim == null)
+            {
+                _logger.LogError("UserId claim not found");
+                return Unauthorized(new
+                {
+                    status = "Error",
+                    statusCode = 401,
+                    message = "UserId Claim not found"
+                });
+            }
+
+            var userId = Guid.Parse(userIdClaim.Value);
+            var result = await _commentCommand.CreateComment(dto, userId);
+            return StatusCode(result.StatusCode, result);
 
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetComment(Guid id)
         {
             _logger.LogInformation("Getting comment with id: {CommentId}", id);
@@ -40,6 +56,7 @@ namespace CommentService.API.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllComments()
         {
             _logger.LogInformation("Getting all comments");
@@ -51,16 +68,42 @@ namespace CommentService.API.Controllers
         public async Task<IActionResult> UpdateComment(Guid id, [FromBody] UpdateCommentDTO dto)
         {
             _logger.LogInformation("Updating comment with id: {CommentId}", id);
-            var result = await _commentCommand.UpdateComment(id, dto);
-            return Ok(result);
+            var userIdClaim = User.FindFirst("userId");
+            if (userIdClaim == null)
+            {
+                _logger.LogError("UserId claim not found");
+                return Unauthorized(new
+                {
+                    status = "Error",
+                    statusCode = 401,
+                    message = "UserId Claim not found"
+                });
+            }
+
+            var userId = Guid.Parse(userIdClaim.Value);
+            var result = await _commentCommand.UpdateComment(id, dto, userId);
+            return StatusCode(result.StatusCode, result);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteComment(Guid id)
         {
             _logger.LogInformation("Deleting Comment with id: {CommentId}", id);
-            var result = await _commentCommand.DeleteComment(id);
-            return Ok(result);
+            var userIdClaim = User.FindFirst("userId");
+            if (userIdClaim == null)
+            {
+                _logger.LogError("UserId claim not found");
+                return Unauthorized(new
+                {
+                    status = "Error",
+                    statusCode = 401,
+                    message = "UserId Claim not found"
+                });
+            }
+
+            var userId = Guid.Parse(userIdClaim.Value);
+            var result = await _commentCommand.DeleteComment(id, userId);
+            return StatusCode(result.StatusCode, result);
         }
     }
 }

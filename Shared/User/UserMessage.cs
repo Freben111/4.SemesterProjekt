@@ -16,6 +16,7 @@ namespace Shared.User
     {
         public string Status { get; set; }
         public string? Error { get; set; }
+        public int StatusCode { get; set; } = 400;
     }
 
     public class UserLoginMessage : UserResultMessage

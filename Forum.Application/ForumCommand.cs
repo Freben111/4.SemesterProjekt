@@ -14,12 +14,14 @@ namespace ForumService.Application
         private readonly ILogger<ForumCommand> _logger;
         private readonly IForumRepository _forumRepository; 
         private readonly IUnitOfWork _unitOfWork;
-        public ForumCommand(DaprClient daprClient, ILogger<ForumCommand> logger,  IForumRepository forumRepository, IUnitOfWork unitOfWork)
+        private readonly IForumStateModelCommand _forumState;
+        public ForumCommand(DaprClient daprClient, ILogger<ForumCommand> logger,  IForumRepository forumRepository, IUnitOfWork unitOfWork, IForumStateModelCommand forumState)
         {
             _daprClient = daprClient;
             _logger = logger;
             _forumRepository = forumRepository;
             _unitOfWork = unitOfWork;
+            _forumState = forumState;
         }
 
         async Task<ForumResultMessage> IForumCommand.CreateForum(CreateForumDTO dto, Guid userId)
@@ -33,22 +35,21 @@ namespace ForumService.Application
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                var existingForum = _daprClient.GetStateAsync<ForumResultMessage>("statestore", dto.Name).Result;
-                if (existingForum != null)
-                {
-                    throw new Exception("Forum already exists");
-                }
-
                 var forum = Forum.CreateForum(dto.Name, dto.Description, userId);
 
                 await _forumRepository.CreateForum(forum);
                 await _unitOfWork.CommitAsync();
 
-                await _daprClient.SaveStateAsync("statestore", forum.Id.ToString(), forum);
+                var forumState = _forumState.Create(forum);
+                await _daprClient.SaveStateAsync("statestore", forum.Id.ToString(), forumState);
+
+                result.ForumId = forum.Id.ToString();
+                result.ForumName = dto.Name;
+                result.OwnerId = userId.ToString();
+                result.Status = "Created";
+                result.StatusCode = 201;
 
                 _logger.LogInformation("Forum {ForumName} created successfully", dto.Name);
-                result.ForumId = forum.Id.ToString();
-                result.Status = "Created";
                 return result;
             }
             catch (Exception ex)
@@ -59,6 +60,7 @@ namespace ForumService.Application
                 result.Error = ex.Message;
                 return result;
             }
+
         }
 
 
@@ -76,19 +78,27 @@ namespace ForumService.Application
                 var forum = await _forumRepository.GetForumById(forumId);
                 if (forum == null)
                 {
+                    result.StatusCode = 404;
                     throw new Exception("Forum not found");
                 }
                 if (forum.OwnerId != userId || !forum.ModeratorIds.Contains(userId))
                 {
+                    result.StatusCode = 403;
                     throw new Exception("User not authorized to update this forum");
                 }
                 forum.UpdateForum(dto.Name, dto.Description);
                 await _forumRepository.UpdateForum(forum, forum.RowVersion);
                 await _unitOfWork.CommitAsync();
 
-                await _daprClient.SaveStateAsync("statestore", forum.Name, forum);
+                var cachedForum = _forumState.Create(forum);
+                await _daprClient.SaveStateAsync("statestore", forum.Id.ToString(), cachedForum);
 
+                result.ForumId = forum.Id.ToString();
+                result.ForumName = dto.Name;
+                result.OwnerId = userId.ToString();
                 result.Status = "Updated";
+                result.StatusCode = 200;
+
                 _logger.LogInformation("Forum {ForumId} updated successfully", forumId);
                 return result;
             }
@@ -116,24 +126,27 @@ namespace ForumService.Application
                 var forum = await _forumRepository.GetForumById(forumId);
                 if (forum == null)
                 {
+                    result.StatusCode = 404;
                     throw new Exception("Forum not found");
                 }
                 if (forum.OwnerId != userId)
                 {
+                    result.StatusCode = 403;
                     throw new Exception("User not authorized to delete this forum");
                 }
 
                 await _forumRepository.DeleteForum(forum, forum.RowVersion);
                 await _unitOfWork.CommitAsync();
 
-                var cachedForum = await _daprClient.GetStateAsync<Forum>("statestore", forumId.ToString());
-                if (cachedForum != null)
-                {
-                    await _daprClient.DeleteStateAsync("statestore", forumId.ToString());
-                }
+                await _daprClient.DeleteStateAsync("statestore", forumId.ToString());
+
+                result.ForumId = forum.Id.ToString();
+                result.ForumName = forum.Name;
+                result.OwnerId = userId.ToString();
+                result.Status = "Deleted";
+                result.StatusCode = 200;
 
                 _logger.LogInformation("Forum {ForumId} deleted successfully", forumId);
-                result.Status = "Deleted";
                 return result;
 
             }

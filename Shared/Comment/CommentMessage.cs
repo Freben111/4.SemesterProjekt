@@ -9,12 +9,14 @@ namespace Shared.Comment
     public class CommentMessage : WorkflowMessage
     {
         public string? CommentId { get; set; }
-        public UserDto? User { get; set; }
+        public string? PostId { get; set; }
+        public string? AuthorId { get; set; }
     }
 
     public class CommentResultMessage : CommentMessage
     {
         public string Status { get; set; }
         public string? Error { get; set; }
+        public int StatusCode { get; set; } = 400;
     }
 }

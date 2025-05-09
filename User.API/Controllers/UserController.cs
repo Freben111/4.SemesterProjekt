@@ -1,7 +1,8 @@
-﻿using UserService.Application.Interfaces;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.User;
 using Shared.User.DTO_s;
-using Microsoft.AspNetCore.Authorization;
+using UserService.Application.Interfaces;
 
 namespace UserService.API.Controllers
 {
@@ -32,7 +33,7 @@ namespace UserService.API.Controllers
 
             _logger.LogInformation("Creating user with name: {Username}", dto.UserName);
             var result = await _userCommand.CreateUser(dto);
-            return Ok(result);
+            return StatusCode(result.StatusCode, result);
 
         }
 
@@ -41,26 +42,42 @@ namespace UserService.API.Controllers
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO dto)
         {
+            var result = new UserLoginMessage();
             _logger.LogInformation("Logging in user with name: {Username}", dto.username);
-            var result = await _userCommand.Login(dto);
-            return Ok(result);
+            result = await _userCommand.Login(dto);
+            return StatusCode(result.StatusCode, result);
+
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetUserById(Guid id)
         {
-            _logger.LogInformation("Getting user with id: {UserId}", id);
-            var result = await _userQuery.GetUser(id);
-            return Ok(result);
+            try
+            {
+                _logger.LogInformation("Getting user with id: {UserId}", id);
+                var result = await _userQuery.GetUser(id);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(400, "Bad Request");
+            }
         }
 
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetAllUsers()
         {
-            _logger.LogInformation("Getting all users");
-            var result = await _userQuery.GetAllUsers();
-            return Ok(result);
+            try
+            {
+                _logger.LogInformation("Getting all users");
+                var result = await _userQuery.GetAllUsers();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(400, "Bad Request");
+            }
         }
 
         [HttpPut("{id}")]
@@ -70,14 +87,19 @@ namespace UserService.API.Controllers
             if (userIdClaim == null)
             {
                 _logger.LogError("UserId claim not found");
-                return Unauthorized("UserId Claim not found");
+                return Unauthorized(new
+                {
+                    status = "Error",
+                    statusCode = 401,
+                    message = "UserId Claim not found"
+                });
             }
             var userId = Guid.Parse(userIdClaim.Value);
 
 
             _logger.LogInformation("Updating user with id: {UserId}", id);
             var result = await _userCommand.UpdateUser(id, dto, userId);
-            return Ok(result);
+            return StatusCode(result.StatusCode, result);
         }
 
         [HttpDelete("{id}")]
@@ -93,7 +115,7 @@ namespace UserService.API.Controllers
 
             _logger.LogInformation("Deleting user with id: {UserId}", id);
             var result = await _userCommand.DeleteUser(id, userId);
-            return Ok(result);
+            return StatusCode(result.StatusCode, result);
         }
     }
 }

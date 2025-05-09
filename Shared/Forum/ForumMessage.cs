@@ -10,12 +10,13 @@ namespace Shared.Forum
     {
         public string? ForumId { get; set; }
         public string ForumName{ get; set; }
-        public UserDto? User { get; set; }
+        public string? OwnerId { get; set; }
     }
 
     public class ForumResultMessage : ForumMessage
     {
         public string Status { get; set; }
         public string? Error { get; set; }
+        public int StatusCode { get; set; } = 400;
     }
 }

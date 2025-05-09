@@ -24,16 +24,29 @@ namespace PostService.API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreatePost([FromBody] CreatePostDTO dto)
         {
+            _logger.LogInformation("Creating post with name: {PostTitle}", dto.Title);
+            var userIdClaim = User.FindFirst("userId");
+            if (userIdClaim == null)
+            {
+                _logger.LogError("UserId claim not found");
+                return Unauthorized(new
+                {
+                    status = "Error",
+                    statusCode = 401,
+                    message = "UserId Claim not found"
+                });
+            }
 
-            _logger.LogInformation("Creating post with name: {PostName}", dto.Title);
-            var result = await _postCommand.CreatePost(dto);
-            return Ok(result);
+            var userId = Guid.Parse(userIdClaim.Value);
+            var result = await _postCommand.CreatePost(dto, userId);
+            return StatusCode(result.StatusCode, result);
 
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPost(Guid id)
         {
+
             _logger.LogInformation("Getting post with id: {PostId}", id);
             var result = await _postQuery.GetPost(id);
             return Ok(result);
@@ -51,16 +64,42 @@ namespace PostService.API.Controllers
         public async Task<IActionResult> UpdatePost(Guid id, [FromBody] UpdatePostDTO dto)
         {
             _logger.LogInformation("Updating post with id: {PostId}", id);
-            var result = await _postCommand.UpdatePost(id, dto);
-            return Ok(result);
+            var userIdClaim = User.FindFirst("userId");
+            if (userIdClaim == null)
+            {
+                _logger.LogError("UserId claim not found");
+                return Unauthorized(new
+                {
+                    status = "Error",
+                    statusCode = 401,
+                    message = "UserId Claim not found"
+                });
+            }
+
+            var userId = Guid.Parse(userIdClaim.Value);
+            var result = await _postCommand.UpdatePost(id, dto, userId);
+            return StatusCode(result.StatusCode, result);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePost(Guid id)
         {
             _logger.LogInformation("Deleting post with id: {PostId}", id);
-            var result = await _postCommand.DeletePost(id);
-            return Ok(result);
+            var userIdClaim = User.FindFirst("userId");
+            if (userIdClaim == null)
+            {
+                _logger.LogError("UserId claim not found");
+                return Unauthorized(new
+                {
+                    status = "Error",
+                    statusCode = 401,
+                    message = "UserId Claim not found"
+                });
+            }
+
+            var userId = Guid.Parse(userIdClaim.Value);
+            var result = await _postCommand.DeletePost(id, userId);
+            return StatusCode(result.StatusCode, result);
         }
     }
 }

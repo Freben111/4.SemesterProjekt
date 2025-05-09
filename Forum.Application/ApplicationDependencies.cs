@@ -13,6 +13,7 @@ namespace ForumService.Application
         public static IServiceCollection AddApplicationDependencies(this IServiceCollection services)
         {
             services.AddScoped<IForumCommand, ForumCommand>();
+            services.AddScoped<IForumStateModelCommand, ForumStateModelCommand>();
             return services;
         }
     }

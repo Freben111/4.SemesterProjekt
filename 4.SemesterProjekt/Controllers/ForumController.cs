@@ -1,7 +1,10 @@
 ﻿using Dapr.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Forum;
 using Shared.Forum.DTO_s;
+using System.Net.Http.Headers;
+using System.Text.Json;
 
 namespace APIGateway.Controllers
 {
@@ -20,62 +23,103 @@ namespace APIGateway.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateForum([FromBody] CreateForumDTO dto)
         {
-            var result = await _dapr.InvokeMethodAsync<CreateForumDTO, object>(
-                HttpMethod.Post,
-                "forumservice",     
-                "api/forum",        
-                dto
-            );
+            if (!AuthenticationHeaderValue.TryParse(Request.Headers.Authorization, out var authHeader))
+            {
+                return Unauthorized("Authorization header is missing");
+            }
 
-            return Ok(result);
+            var request = _dapr.CreateInvokeMethodRequest(
+                HttpMethod.Post,
+                "forumservice",
+                $"api/forum");
+
+            request.Headers.Authorization = authHeader;
+
+            //sætter content til at være json og sætter content type til application/json
+            var json = JsonSerializer.Serialize(dto);
+            request.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _dapr.InvokeMethodWithResponseAsync(request);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<object>();
+
+            return StatusCode((int)response.StatusCode, responseContent);
         }
 
         [HttpGet("{id}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetForum(Guid id)
         {
-            var result = await _dapr.InvokeMethodAsync<object>(
+
+            var request = _dapr.CreateInvokeMethodRequest(
                 HttpMethod.Get,
                 "forumservice",
-                $"api/forum/{id}"
-            );
+                $"api/forum/{id}");
 
-            return Ok(result);
+            var response = await _dapr.InvokeMethodWithResponseAsync(request);
+            var responseContent = await response.Content.ReadFromJsonAsync<object>();
+
+            return StatusCode((int)response.StatusCode, responseContent);
         }
 
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetAllForums()
         {
-            var result = await _dapr.InvokeMethodAsync<object[]>(
+            var request = _dapr.CreateInvokeMethodRequest(
                 HttpMethod.Get,
                 "forumservice",
-                "api/forum"
-            );
-            return Ok(result);
+                $"api/forum");
+
+            var response = await _dapr.InvokeMethodWithResponseAsync(request);
+            var responseContent = await response.Content.ReadFromJsonAsync<object>();
+
+            return StatusCode((int)response.StatusCode, responseContent);
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateForum(Guid id, [FromBody] UpdateForumDTO dto)
         {
-            var result = await _dapr.InvokeMethodAsync<UpdateForumDTO, object>(
+            if (!AuthenticationHeaderValue.TryParse(Request.Headers.Authorization, out var authHeader))
+            {
+                return Unauthorized("Authorization header is missing");
+            }
+
+            var request = _dapr.CreateInvokeMethodRequest(
                 HttpMethod.Put,
                 "forumservice",
-                $"api/forum/{id}",
-                dto
-            );
-            return Ok(result);
+                $"api/forum/{id}");
+
+            request.Headers.Authorization = authHeader;
+
+            var json = JsonSerializer.Serialize(dto);
+            request.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _dapr.InvokeMethodWithResponseAsync(request);
+            var responseContent = await response.Content.ReadFromJsonAsync<object>();
+
+            return StatusCode((int)response.StatusCode, responseContent);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteForum(Guid id)
         {
-            var result = await _dapr.InvokeMethodAsync<object>(
+            if (!AuthenticationHeaderValue.TryParse(Request.Headers.Authorization, out var authHeader))
+            {
+                return Unauthorized("Authorization header is missing");
+            }
+
+            var request = _dapr.CreateInvokeMethodRequest(
                 HttpMethod.Delete,
                 "forumservice",
-                $"api/forum/{id}"
-            );
-            return Ok(result);
+                $"api/forum/{id}");
+
+            request.Headers.Authorization = authHeader;
+
+            var response = await _dapr.InvokeMethodWithResponseAsync(request);
+            var responseContent = await response.Content.ReadFromJsonAsync<object>();
+
+            return StatusCode((int)response.StatusCode, responseContent);
         }
     }
 }

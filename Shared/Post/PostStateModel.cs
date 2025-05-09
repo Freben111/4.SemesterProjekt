@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shared.Post.DTO_s
+namespace Shared.Post
 {
-    public class PostDTO
+    public class PostStateModel
     {
         public Guid Id { get; set; }
         public string Title { get; set; }

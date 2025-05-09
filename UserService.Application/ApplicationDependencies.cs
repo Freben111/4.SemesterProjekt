@@ -14,6 +14,7 @@ namespace UserService.Application
         {
             services.AddScoped<IUserCommand, UserCommand>();
             services.AddScoped<IJwtService, JwtService>();
+            services.AddScoped<IUserStateModelCommand, UserStateModelCommand>();
             return services;
         }
     }

@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Dapr.Client;
-using Shared.User.DTO_s;
+﻿using Dapr.Client;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Shared.User;
+using Shared.User.DTO_s;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
@@ -21,46 +22,68 @@ namespace APIGateway.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> SignUp([FromBody] CreateUserDTO dto)
         {
-            var result = await _dapr.InvokeMethodAsync<CreateUserDTO, object>(
+
+            var request = _dapr.CreateInvokeMethodRequest(
                 HttpMethod.Post,
                 "userservice",
-                "api/user",
-                dto
-            );
-            return Ok(result);
+                "api/user");
+
+
+            var json = JsonSerializer.Serialize(dto);
+            request.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _dapr.InvokeMethodWithResponseAsync(request);
+            var responseContent = await response.Content.ReadFromJsonAsync<object>();
+
+            return StatusCode((int)response.StatusCode, responseContent);
         }
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginDTO dto)
         {
-            var result = await _dapr.InvokeMethodAsync<LoginDTO, object>(
-                HttpMethod.Post,
-                "userservice",
-                "api/user/login",
-                dto
-            );
-            return Ok(result);
+
+            var request = _dapr.CreateInvokeMethodRequest(
+            HttpMethod.Post,
+            "userservice",
+            "api/user/login");
+
+
+            var json = JsonSerializer.Serialize(dto);
+            request.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _dapr.InvokeMethodWithResponseAsync(request);
+            var responseContent = await response.Content.ReadFromJsonAsync<object>();
+
+            return StatusCode((int)response.StatusCode, responseContent);
         }
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetUserById(Guid id)
         {
-            var result = await _dapr.InvokeMethodAsync<object>(
+
+            var request = _dapr.CreateInvokeMethodRequest(
                 HttpMethod.Get,
                 "userservice",
-                $"api/user/{id}"
-            );
-            return Ok(result);
+                $"api/user/{id}");
+
+            var response = await _dapr.InvokeMethodWithResponseAsync(request);
+            var responseContent = await response.Content.ReadFromJsonAsync<object>();
+
+            return StatusCode((int)response.StatusCode, responseContent);
         }
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetAllUsers()
         {
-            var result = await _dapr.InvokeMethodAsync<object[]>(
+            var request = _dapr.CreateInvokeMethodRequest(
                 HttpMethod.Get,
                 "userservice",
-                "api/user"
-            );
-            return Ok(result);
+                $"api/user");
+
+            var response = await _dapr.InvokeMethodWithResponseAsync(request);
+            var responseContent = await response.Content.ReadFromJsonAsync<object[]>();
+
+            return StatusCode((int)response.StatusCode, responseContent);
         }
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserDTO dto)
@@ -84,7 +107,11 @@ namespace APIGateway.Controllers
             request.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
             var response = await _dapr.InvokeMethodWithResponseAsync(request);
-            return Ok(response);
+            var responseContent = await response.Content.ReadFromJsonAsync<object>();
+
+            return StatusCode((int)response.StatusCode, responseContent);
+
+
         }
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(Guid id)
@@ -96,15 +123,17 @@ namespace APIGateway.Controllers
             }
             //Laver en ny request
             var request = _dapr.CreateInvokeMethodRequest(
-                HttpMethod.Delete, 
-                "userservice", 
+                HttpMethod.Delete,
+                "userservice",
                 $"api/user/{id}");
             //sætter nye requests headers til authHeader aka sender jwt videre i systemet
             request.Headers.Authorization = authHeader;
 
             //invoker nye request
             var response = await _dapr.InvokeMethodWithResponseAsync(request);
-            return Ok(response);
+            var responseContent = await response.Content.ReadFromJsonAsync<object>();
+
+            return StatusCode((int)response.StatusCode, responseContent);
 
 
             //Det er gjort sådan for at undgå at ændre på headeren. Bearer problemet

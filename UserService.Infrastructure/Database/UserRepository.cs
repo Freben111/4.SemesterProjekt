@@ -1,12 +1,6 @@
-﻿using UserService.Domain;
+﻿using Microsoft.EntityFrameworkCore;
+using UserService.Domain;
 using UserService.Domain.Interfaces;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace UserService.Infrastructure.Database
 {
@@ -72,10 +66,6 @@ namespace UserService.Infrastructure.Database
         {
             var user = await _db.Users
                 .FirstOrDefaultAsync(u => u.UserName == username);
-            if (user == null)
-            {
-                throw new KeyNotFoundException("User not found.");
-            }
             return user;
         }
     }

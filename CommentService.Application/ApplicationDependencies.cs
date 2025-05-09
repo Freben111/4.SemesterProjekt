@@ -13,6 +13,7 @@ namespace CommentService.Application
         public static IServiceCollection AddApplicationDependencies(this IServiceCollection services)
         {
             services.AddScoped<ICommentCommand, CommentCommand>();
+            services.AddScoped<ICommentStateModelCommand, CommentStateModelCommand>();
             return services;
         }
     }

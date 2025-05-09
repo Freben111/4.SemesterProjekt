@@ -37,7 +37,7 @@ namespace CommentService.Infrastructure.Database
                 Id = comment.Id,
                 Content = comment.Content,
                 PostId = comment.PostId,
-                UserId = comment.UserId,
+                UserId = comment.AuthorId,
                 RowVersion = comment.RowVersion
             };
             return commentDTO;
@@ -55,7 +55,7 @@ namespace CommentService.Infrastructure.Database
                     Id = comment.Id,
                     Content = comment.Content,
                     PostId = comment.PostId,
-                    UserId = comment.UserId,
+                    UserId = comment.AuthorId,
                     RowVersion = comment.RowVersion
                 };
                 commentDTOs.Add(commentDTO);

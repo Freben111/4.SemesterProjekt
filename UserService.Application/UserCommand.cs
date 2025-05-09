@@ -16,8 +16,9 @@ namespace UserService.Application
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPasswordHasher _passwordHasher;
         private readonly IJwtService _jwtService;
+        private readonly IUserStateModelCommand _userStateModel;
 
-        public UserCommand(DaprClient daprClient, ILogger<UserCommand> logger, IUserRepository userRepository, IUnitOfWork unitOfWork, IPasswordHasher passwordHasher, IJwtService jwtService)
+        public UserCommand(DaprClient daprClient, ILogger<UserCommand> logger, IUserRepository userRepository, IUnitOfWork unitOfWork, IPasswordHasher passwordHasher, IJwtService jwtService, IUserStateModelCommand userStateModel)
         {
             _daprClient = daprClient;
             _logger = logger;
@@ -25,6 +26,7 @@ namespace UserService.Application
             _unitOfWork = unitOfWork;
             _passwordHasher = passwordHasher;
             _jwtService = jwtService;
+            _userStateModel = userStateModel;
         }
 
         async Task<UserResultMessage> IUserCommand.CreateUser(CreateUserDTO dto)
@@ -38,9 +40,16 @@ namespace UserService.Application
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                var existingUser = _daprClient.GetStateAsync<UserResultMessage>("statestore", dto.UserName).Result;
+                var existingCachUser = _daprClient.GetStateAsync<UserStateModelCommand>("statestore", dto.UserName).Result;
+                if (existingCachUser != null)
+                {
+                    result.StatusCode = 409;
+                    throw new Exception("User already exists");
+                }
+                var existingUser = await _userRepository.GetUserByUsername(dto.UserName);
                 if (existingUser != null)
                 {
+                    result.StatusCode = 409;
                     throw new Exception("User already exists");
                 }
 
@@ -50,11 +59,13 @@ namespace UserService.Application
                 await _userRepository.CreateUser(user);
                 await _unitOfWork.CommitAsync();
 
-                await _daprClient.SaveStateAsync("statestore", user.Id.ToString(), user);
+                var cachingUser = _userStateModel.Create(user);
+                await _daprClient.SaveStateAsync("statestore", user.Id.ToString(), cachingUser);
 
                 _logger.LogInformation("User {UserName} created successfully", dto.UserName);
                 result.UserName = user.UserName;
                 result.Status = "Created";
+                result.StatusCode = 201;
                 return result;
             }
             catch (Exception ex)
@@ -81,19 +92,24 @@ namespace UserService.Application
                 var user = await _userRepository.GetUserByUsername(dto.username);
                 if (user == null)
                 {
+                    result.StatusCode = 404;
                     throw new Exception("User does not exist");
                 }
                 var isValidPassword = _passwordHasher.VerifyHashedPassword(user.HashedPassword, dto.password);
                 if (!isValidPassword)
                 {
+                    result.StatusCode = 401;
                     throw new Exception("Password incorrect");
                 }
                 var token = _jwtService.GenerateToken(user.UserName, user.Id, user.role);
 
+                var cachUser = _userStateModel.Create(user);
+                await _daprClient.SaveStateAsync("statestore", user.Id.ToString(), cachUser);
+
                 result.Token = token;
                 result.UserId = user.Id.ToString();
                 result.Status = "LoggedIn";
-
+                result.StatusCode = 200;
                 return result;
 
             }
@@ -121,21 +137,28 @@ namespace UserService.Application
                 var user = await _userRepository.GetUserById(userId);
                 if (user == null)
                 {
+                    result.StatusCode = 404;
                     throw new Exception("User not found");
                 }
                 if (user.Id != authId)
                 {
+                    result.StatusCode = 403;
                     throw new Exception("You are not authorized to update this user");
                 }
 
                 var hashedPassword = _passwordHasher.HashPassword(dto.Password);
                 user.UpdateUser(dto.UserName, dto.Email, hashedPassword, dto.DisplayName);
+
                 await _userRepository.UpdateUser(user, user.RowVersion);
                 await _unitOfWork.CommitAsync();
 
-                await _daprClient.SaveStateAsync("statestore", user.Id.ToString(), user);
+                var userStateModel = _userStateModel.Create(user);
+                await _daprClient.SaveStateAsync("statestore", user.Id.ToString(), userStateModel);
 
                 result.Status = "Updated";
+                result.UserName = user.UserName;
+                result.StatusCode = 200;
+                
                 _logger.LogInformation("User {UserId} updated successfully", userId);
                 return result;
             }
@@ -163,24 +186,22 @@ namespace UserService.Application
                 var user = await _userRepository.GetUserById(userId);
                 if (user == null)
                 {
+                    result.StatusCode = 404;
                     throw new Exception("User not found");
                 }
                 if (user.Id != authId)
                 {
+                    result.StatusCode = 403;
                     throw new Exception("You are not authorized to delete this user");
                 }
 
                 await _userRepository.DeleteUser(user, user.RowVersion);
+                await _daprClient.DeleteStateAsync("statestore", userId.ToString());
                 await _unitOfWork.CommitAsync();
-
-                var cachedPost = await _daprClient.GetStateAsync<User>("statestore", userId.ToString());
-                if (cachedPost != null)
-                {
-                    await _daprClient.DeleteStateAsync("statestore", userId.ToString());
-                }
 
                 _logger.LogInformation("User {UserId} deleted successfully", userId);
                 result.Status = "Deleted";
+                result.StatusCode = 200;
                 return result;
 
             }
@@ -193,7 +214,6 @@ namespace UserService.Application
                 return result;
             }
         }
-
     }
 
 }

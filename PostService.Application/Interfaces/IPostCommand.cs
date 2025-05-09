@@ -11,10 +11,10 @@ namespace PostService.Application.Interfaces
     public interface IPostCommand
     {
 
-        Task<PostResultMessage> CreatePost(CreatePostDTO dto);
+        Task<PostResultMessage> CreatePost(CreatePostDTO dto, Guid userId);
 
-        Task<PostResultMessage> UpdatePost(Guid forumId, UpdatePostDTO dto);
+        Task<PostResultMessage> UpdatePost(Guid forumId, UpdatePostDTO dto, Guid userId);
 
-        Task<PostResultMessage> DeletePost(Guid forumId);
+        Task<PostResultMessage> DeletePost(Guid forumId, Guid userId);
     }
 }

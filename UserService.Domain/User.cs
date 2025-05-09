@@ -40,6 +40,7 @@ namespace UserService.Domain
                 UpdatedAt = DateTime.UtcNow
             };
         }
+
         public void UpdateUser(string? userName, string? email, string? hashedPassword, string? displayName)
         {
             if (string.IsNullOrEmpty(userName) && string.IsNullOrEmpty(email) && string.IsNullOrEmpty(hashedPassword) && string.IsNullOrEmpty(displayName))
@@ -50,6 +51,7 @@ namespace UserService.Domain
             this.DisplayName = displayName ?? this.DisplayName;
             this.UpdatedAt = DateTime.UtcNow;
         }
+
 
 
 

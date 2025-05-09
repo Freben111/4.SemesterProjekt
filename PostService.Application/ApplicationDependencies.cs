@@ -13,6 +13,7 @@ namespace PostService.Application
         public static IServiceCollection AddApplicationDependencies(this IServiceCollection services)
         {
             services.AddScoped<IPostCommand, PostCommand>();
+            services.AddScoped<IPostStateModelCommand, PostStateModelCommand>();
             return services;
         }
     }
