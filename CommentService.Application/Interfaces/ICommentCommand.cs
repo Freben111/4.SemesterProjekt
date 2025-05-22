@@ -16,5 +16,7 @@ namespace CommentService.Application.Interfaces
         Task<CommentResultMessage> UpdateComment(Guid forumId, UpdateCommentDTO dto, Guid authId);
 
         Task<CommentResultMessage> DeleteComment(Guid forumId, Guid authId);
+
+        Task<CommentResultMessage> DeleteCommentByPostIds(List<Guid> postIds, Guid authId);
     }
 }

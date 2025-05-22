@@ -136,6 +136,18 @@ namespace PostService.Application
                     throw new Exception("You are not authorized to update this user");
                 }
 
+                var postBackup = new PostBackupDTO
+                {
+                    Id = post.Id,
+                    Title = post.Title,
+                    Content = post.Content,
+                    AuthorId = post.AuthorId,
+                    ForumId = post.ForumId,
+                    CreatedAt = post.CreatedAt,
+                    UpdatedAt = post.UpdatedAt,
+                    RowVersion = post.RowVersion
+                };
+
                 await _postRepository.DeletePost(post, post.RowVersion);
                 await _unitOfWork.CommitAsync();
 
@@ -147,6 +159,7 @@ namespace PostService.Application
                 result.AuthorId = authId.ToString();
                 result.Status = "Deleted";
                 result.StatusCode = 200;
+                result.BackupPost.Add(postBackup);
 
                 _logger.LogInformation("Post {PostId} deleted successfully", postId);
                 return result;
@@ -162,6 +175,92 @@ namespace PostService.Application
             }
         }
 
-    }
+        async Task<PostResultMessage> IPostCommand.DeletePostFromForum(Guid forumId, Guid authId)
+        {
+            var result = new PostResultMessage
+            {
+                ForumId = forumId,
+                Status = "Deleting"
+            };
+            try
+            {
+                await _unitOfWork.BeginTransactionAsync();
+                var posts = await _postRepository.GetPostsByForumId(forumId);
+                if (posts == null)
+                {
+                    result.StatusCode = 404;
+                    throw new Exception("Posts not found");
+                }
+                foreach (var post in posts)
+                {
+                    var postBackup = new PostBackupDTO
+                    {
+                        Id = post.Id,
+                        Title = post.Title,
+                        Content = post.Content,
+                        AuthorId = post.AuthorId,
+                        ForumId = post.ForumId,
+                        CreatedAt = post.CreatedAt,
+                        UpdatedAt = post.UpdatedAt,
+                        RowVersion = post.RowVersion
+                    };
+                    await _postRepository.DeletePost(post, post.RowVersion);
+                    result.BackupPost.Add(postBackup);
+                }
+                await _unitOfWork.CommitAsync();
+                foreach (var post in posts)
+                {
+                    await _daprClient.DeleteStateAsync("statestore", post.Id.ToString());
+                }
+                result.ForumId = forumId;
+                result.Status = "Posts Deleted";
+                result.StatusCode = 200;
+                _logger.LogInformation("Posts from forum {ForumId} deleted successfully", forumId);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync();
+                _logger.LogError(ex, "Error deleting posts from forum {ForumId}", forumId);
+                result.Status = "Error";
+                result.Error = ex.Message;
+                return result;
+            }
+        }
 
+        async Task<PostResultMessage> IPostCommand.RestorePost(List<PostBackupDTO> backups)
+        {
+            var result = new PostResultMessage
+            {
+                Status = "Restoring"
+            };
+            try
+            {
+                await _unitOfWork.BeginTransactionAsync();
+                foreach (var backup in backups)
+                {
+                    var post = Post.RestorePost(backup.Id, backup.Title, backup.Content, backup.CreatedAt, backup.UpdatedAt, backup.ForumId, backup.AuthorId);
+                    await _postRepository.CreatePost(post);
+                    var postState = _postStateModel.Create(post);
+                    await _daprClient.SaveStateAsync("statestore", post.Id.ToString(), postState);
+                }
+
+                await _unitOfWork.CommitAsync();
+                result.Status = "Restored";
+                result.StatusCode = 200;
+                return result;
+
+
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync();
+                _logger.LogError(ex, "Error restoring posts");
+                result.Status = "Error";
+                result.Error = ex.Message;
+                return result;
+            }
+
+        }
+    }
 }

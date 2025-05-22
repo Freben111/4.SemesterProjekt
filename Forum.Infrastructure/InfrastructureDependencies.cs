@@ -1,14 +1,10 @@
 ﻿using ForumService.Application.Interfaces;
 using ForumService.Domain.Interfaces;
 using ForumService.Infrastructure.Database;
+using ForumService.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ForumService.Infrastructure
 {
@@ -22,6 +18,7 @@ namespace ForumService.Infrastructure
             services.AddScoped<IForumRepository, ForumRepository>();
             services.AddScoped<IForumQuery, ForumQuery>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IJwtValidator, JwtValidator>();
 
             return services;
         }

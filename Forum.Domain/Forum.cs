@@ -49,5 +49,19 @@ namespace ForumService.Domain
             this.Description = description;
             this.UpdatedAt = DateTime.UtcNow;
         }
+
+        public static Forum RestoreForum(Guid id, string name, string description, DateTime createdAt, DateTime updatedAt, Guid ownerId, List<Guid> moderatorIds)
+        {
+            return new Forum
+            {
+                Id = id,
+                Name = name,
+                Description = description,
+                CreatedAt = createdAt,
+                UpdatedAt = updatedAt,
+                OwnerId = ownerId,
+                ModeratorIds = moderatorIds
+            };
+        }
     }
 }

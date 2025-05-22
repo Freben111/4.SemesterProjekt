@@ -50,5 +50,19 @@ namespace PostService.Domain
             this.Content = content;
             this.UpdatedAt = DateTime.UtcNow;
         }
+
+        public static Post RestorePost(Guid id, string title, string content, DateTime createdAt, DateTime updatedAt, Guid forumId, Guid authorId)
+        {
+            return new Post
+            {
+                Id = id,
+                Title = title,
+                Content = content,
+                CreatedAt = createdAt,
+                UpdatedAt = updatedAt,
+                ForumId = forumId,
+                AuthorId = authorId
+            };
+        }
     }
 }

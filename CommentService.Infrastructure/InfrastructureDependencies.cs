@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommentService.Infrastructure.Security;
 
 namespace CommentService.Infrastructure
 {
@@ -23,6 +24,7 @@ namespace CommentService.Infrastructure
             services.AddScoped<ICommentRepository, CommentRepository>();
             services.AddScoped<ICommentQuery, CommentQuery>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IJwtValidator, JwtValidator>();
 
             return services;
         }

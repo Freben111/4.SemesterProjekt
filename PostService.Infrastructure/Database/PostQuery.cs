@@ -38,6 +38,7 @@ namespace PostService.Infrastructure.Database
                 Title = post.Title,
                 Content = post.Content,
                 ForumId = post.ForumId,
+                AuthorId = post.AuthorId,
                 RowVersion = post.RowVersion
             };
             return postDTO;
@@ -56,6 +57,7 @@ namespace PostService.Infrastructure.Database
                     Title = post.Title,
                     Content = post.Content,
                     ForumId = post.ForumId,
+                    AuthorId = post.AuthorId,
                     RowVersion = post.RowVersion
                 };
                 postDTOs.Add(postDTO);

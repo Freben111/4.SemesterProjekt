@@ -16,5 +16,7 @@ namespace PostService.Application.Interfaces
         Task<PostResultMessage> UpdatePost(Guid forumId, UpdatePostDTO dto, Guid userId);
 
         Task<PostResultMessage> DeletePost(Guid forumId, Guid userId);
+        Task<PostResultMessage> DeletePostFromForum(Guid forumId, Guid authId);
+        Task<PostResultMessage> RestorePost(List<PostBackupDTO> backups);
     }
 }

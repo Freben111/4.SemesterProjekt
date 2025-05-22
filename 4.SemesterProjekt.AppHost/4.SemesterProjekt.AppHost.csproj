@@ -22,6 +22,7 @@
     <ProjectReference Include="..\ForumService.API\ForumService.API.csproj" />
     <ProjectReference Include="..\PostService.API\PostService.API.csproj" />
     <ProjectReference Include="..\User.API\UserService.API.csproj" />
+    <ProjectReference Include="..\WorkflowService\WorkflowService.csproj" />
   </ItemGroup>
 
 </Project>

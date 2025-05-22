@@ -4,13 +4,7 @@ using PostService.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using PostService.Infrastructure;
-using PostService.Application.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using PostService.Infrastructure.Security;
 
 namespace PostService.Infrastructure
 {
@@ -24,6 +18,7 @@ namespace PostService.Infrastructure
             services.AddScoped<IPostRepository, PostRepository>();
             services.AddScoped<IPostQuery, PostQuery>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<IJwtValidator, JwtValidator>();
 
             return services;
         }

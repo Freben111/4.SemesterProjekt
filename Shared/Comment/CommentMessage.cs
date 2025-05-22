@@ -9,8 +9,9 @@ namespace Shared.Comment
     public class CommentMessage : WorkflowMessage
     {
         public string? CommentId { get; set; }
-        public string? PostId { get; set; }
+        public List<Guid> PostIds { get; set; } = new List<Guid>();
         public string? AuthorId { get; set; }
+        public string? JWT { get; set; }
     }
 
     public class CommentResultMessage : CommentMessage

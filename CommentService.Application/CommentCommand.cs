@@ -45,7 +45,7 @@ namespace CommentService.Application
 
                 result.CommentId = comment.Id.ToString();
                 result.Status = "Created";
-                result.PostId = dto.PostId.ToString();
+                result.PostIds.Add(Guid.Parse(dto.PostId));
                 result.AuthorId = authId.ToString();
                 result.StatusCode = 201;
 
@@ -95,7 +95,7 @@ namespace CommentService.Application
 
                 result.CommentId = comment.Id.ToString();
                 result.Status = "Updated";
-                result.PostId = comment.PostId.ToString();
+                result.PostIds.Add(comment.PostId ?? Guid.Empty);
                 result.AuthorId = comment.AuthorId.ToString();
                 result.StatusCode = 200;
 
@@ -142,7 +142,7 @@ namespace CommentService.Application
 
                 result.CommentId = comment.Id.ToString();
                 result.Status = "Deleted";
-                result.PostId = comment.PostId.ToString();
+                result.PostIds.Add(comment.PostId ?? Guid.Empty);
                 result.AuthorId = comment.AuthorId.ToString();
                 result.StatusCode = 200;
 
@@ -154,6 +154,48 @@ namespace CommentService.Application
             {
                 await _unitOfWork.RollbackAsync();
                 _logger.LogError(ex, "Error deleting comment {CommentId}", commentId);
+                result.Status = "Error";
+                result.Error = ex.Message;
+                return result;
+            }
+        }
+
+        async Task<CommentResultMessage> ICommentCommand.DeleteCommentByPostIds(List<Guid> postIds, Guid authId)
+        {
+            var result = new CommentResultMessage
+            {
+                PostIds = postIds,
+                Status = "Deleting"
+            };
+            try
+            {
+                await _unitOfWork.BeginTransactionAsync();
+
+                var comments = await _commentRepository.GetCommentsByPostId(postIds);
+                if (comments == null)
+                {
+                    result.StatusCode = 404;
+                    throw new Exception("Comment not found");
+                }
+                foreach (var comment in comments)
+                {
+                    await _commentRepository.DeleteComment(comment, comment.RowVersion);
+                    await _daprClient.DeleteStateAsync("statestore", comment.Id.ToString());
+                }
+                await _unitOfWork.CommitAsync();
+
+                result.Status = "Comments Deleted";
+                result.PostIds = postIds;
+                result.AuthorId = authId.ToString();
+                result.StatusCode = 200;
+                _logger.LogInformation("Comments deleted successfully");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync();
+                _logger.LogError(ex, "Error deleting comments");
                 result.Status = "Error";
                 result.Error = ex.Message;
                 return result;

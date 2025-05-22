@@ -135,6 +135,18 @@ namespace ForumService.Application
                     throw new Exception("User not authorized to delete this forum");
                 }
 
+                var backupForum = new ForumBackupDTO
+                {
+                    Id = forum.Id,
+                    Name = forum.Name,
+                    Description = forum.Description,
+                    CreatedAt = forum.CreatedAt,
+                    UpdatedAt = forum.UpdatedAt,
+                    RowVersion = forum.RowVersion,
+                    OwnerId = forum.OwnerId,
+                    ModeratorIds = forum.ModeratorIds
+                };
+
                 await _forumRepository.DeleteForum(forum, forum.RowVersion);
                 await _unitOfWork.CommitAsync();
 
@@ -143,8 +155,9 @@ namespace ForumService.Application
                 result.ForumId = forum.Id.ToString();
                 result.ForumName = forum.Name;
                 result.OwnerId = userId.ToString();
-                result.Status = "Deleted";
+                result.Status = "Forum Deleted";
                 result.StatusCode = 200;
+                result.BackupForum = backupForum;
 
                 _logger.LogInformation("Forum {ForumId} deleted successfully", forumId);
                 return result;
@@ -154,6 +167,42 @@ namespace ForumService.Application
             {
                 await _unitOfWork.RollbackAsync();
                 _logger.LogError(ex, "Error deleting forum {ForumId}", forumId);
+                result.Status = "Error";
+                result.Error = ex.Message;
+                return result;
+            }
+        }
+
+        async Task<ForumResultMessage> IForumCommand.RestoreForum(ForumBackupDTO backup)
+        {
+            var result = new ForumResultMessage
+            {
+                ForumId = backup.Id.ToString(),
+                Status = "Restoring"
+            };
+            try
+            {
+                await _unitOfWork.BeginTransactionAsync();
+                var forum = Forum.RestoreForum(backup.Id, backup.Name, backup.Description, backup.CreatedAt, backup.UpdatedAt, backup.OwnerId, backup.ModeratorIds);
+                await _forumRepository.CreateForum(forum);
+                await _unitOfWork.CommitAsync();
+
+                var cachedForum = _forumState.Create(forum);
+                await _daprClient.SaveStateAsync("statestore", forum.Id.ToString(), cachedForum);
+
+                result.ForumId = forum.Id.ToString();
+                result.ForumName = backup.Name;
+                result.OwnerId = backup.OwnerId.ToString();
+                result.Status = "Restored";
+                result.StatusCode = 200;
+
+                _logger.LogInformation("Forum {ForumId} restored successfully", backup.Id);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                await _unitOfWork.RollbackAsync();
+                _logger.LogError(ex, "Error restoring forum {ForumId}", backup.Id);
                 result.Status = "Error";
                 result.Error = ex.Message;
                 return result;

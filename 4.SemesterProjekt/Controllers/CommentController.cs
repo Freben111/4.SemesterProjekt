@@ -1,6 +1,8 @@
 ﻿using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Comment.DTO_s;
+using System.Net.Http.Headers;
+using System.Text.Json;
 
 namespace APIGateway.Controllers
 {
@@ -18,14 +20,27 @@ namespace APIGateway.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateComment([FromBody] CreateCommentDTO dto)
         {
-            var result = await _dapr.InvokeMethodAsync<CreateCommentDTO, object>(
+            if (!AuthenticationHeaderValue.TryParse(Request.Headers.Authorization, out var authHeader))
+            {
+                return Unauthorized("Authorization header is missing");
+            }
+
+            var request = _dapr.CreateInvokeMethodRequest(
                 HttpMethod.Post,
                 "commentservice",
-                "api/comment",
-                dto
-            );
+                $"api/comment");
 
-            return Ok(result);
+            request.Headers.Authorization = authHeader;
+
+            //sætter content til at være json og sætter content type til application/json
+            var json = JsonSerializer.Serialize(dto);
+            request.Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+            var response = await _dapr.InvokeMethodWithResponseAsync(request);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<object>();
+
+            return StatusCode((int)response.StatusCode, responseContent);
         }
 
         [HttpGet("{id}")]

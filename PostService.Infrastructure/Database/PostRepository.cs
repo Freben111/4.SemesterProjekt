@@ -67,5 +67,17 @@ namespace PostService.Infrastructure.Database
             }
             return post;
         }
+
+        async Task<List<Post>> IPostRepository.GetPostsByForumId(Guid forumId)
+        {
+            var posts = await _db.Posts
+                .Where(p => p.ForumId == forumId)
+                .ToListAsync();
+            if (posts == null || posts.Count == 0)
+            {
+                return new List<Post>();
+            }
+            return posts;
+        }
     }
 }

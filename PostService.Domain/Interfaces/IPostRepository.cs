@@ -7,6 +7,7 @@
         Task UpdatePost(Post post, uint rowVersion);
         Task DeletePost(Post post, uint rowVersion);
         Task<Post> GetPostById(Guid id);
+        Task<List<Post>> GetPostsByForumId(Guid forumId);
 
     }
 }

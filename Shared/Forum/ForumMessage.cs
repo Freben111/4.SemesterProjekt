@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Shared.Forum.DTO_s;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,8 +10,9 @@ namespace Shared.Forum
     public class ForumMessage : WorkflowMessage
     {
         public string? ForumId { get; set; }
-        public string ForumName{ get; set; }
+        public string? ForumName{ get; set; }
         public string? OwnerId { get; set; }
+        public string? JWT { get; set; }
     }
 
     public class ForumResultMessage : ForumMessage
@@ -18,5 +20,6 @@ namespace Shared.Forum
         public string Status { get; set; }
         public string? Error { get; set; }
         public int StatusCode { get; set; } = 400;
+        public ForumBackupDTO? BackupForum { get; set; }
     }
 }

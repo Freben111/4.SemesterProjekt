@@ -1,6 +1,10 @@
 ﻿using PostService.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Post.DTO_s;
+using Shared.Post;
+using Dapr;
+using Shared.Forum;
+using Dapr.Client;
 
 namespace PostService.API.Controllers
 {
@@ -12,13 +16,17 @@ namespace PostService.API.Controllers
         private readonly ILogger<PostController> _logger;
         private readonly IPostCommand _postCommand;
         private readonly IPostQuery _postQuery;
+        private readonly DaprClient _daprClient;
+        private readonly IJwtValidator _jwtValidator;
 
 
-        public PostController(ILogger<PostController> logger, IPostCommand postCommand, IPostQuery postQuery)
+        public PostController(ILogger<PostController> logger, IPostCommand postCommand, IPostQuery postQuery, DaprClient daprClient, IJwtValidator jwtValidator)
         {
             _logger = logger;
             _postCommand = postCommand;
             _postQuery = postQuery;
+            _daprClient = daprClient;
+            _jwtValidator = jwtValidator;
         }
 
         [HttpPost]
@@ -100,6 +108,78 @@ namespace PostService.API.Controllers
             var userId = Guid.Parse(userIdClaim.Value);
             var result = await _postCommand.DeletePost(id, userId);
             return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpDelete("forum/{id}")]
+        [Topic("pubsub", "posts.delete")]
+        public async Task<IActionResult> DeletePostsFromForum(PostMessage input)
+        {
+            _logger.LogInformation("Deleting post with forumid: {forumId}", input.ForumId);
+
+            if (input.JWT == null)
+            {
+                _logger.LogError("Token not found");
+                return Unauthorized(new
+                {
+                    status = "Error",
+                    statusCode = 401,
+                    message = "Token not found"
+                });
+            }
+            var token = input.JWT.StartsWith("Bearer ") ? input.JWT.Substring(7) : input.JWT;
+
+            var validToken = _jwtValidator.ValidateToken(token);
+
+            var userIdClaim = validToken.FindFirst("userId");
+            if (userIdClaim == null)
+            {
+                _logger.LogError("UserId claim not found");
+                return Unauthorized(new
+                {
+                    status = "Error",
+                    statusCode = 401,
+                    message = "UserId Claim not found"
+                });
+            }
+
+
+            var userId = Guid.Parse(userIdClaim.Value);
+            var result = await _postCommand.DeletePostFromForum(input.ForumId ?? Guid.Empty, userId);
+
+            await _daprClient.PublishEventAsync("pubsub", "Posts.Deleted", result);
+
+            return Ok();
+        }
+        [HttpPost("restore")]
+        [Topic("pubsub", "posts.restore")]
+        public async Task<IActionResult> RestorePostsFromForum(List<PostBackupDTO> backups)
+        {
+            //_logger.LogInformation("Restoring posts with forumid: {forumId}", input.ForumId);
+            //if (input.JWT == null)
+            //{
+            //    _logger.LogError("Token not found");
+            //    return Unauthorized(new
+            //    {
+            //        status = "Error",
+            //        statusCode = 401,
+            //        message = "Token not found"
+            //    });
+            //}
+            //var token = input.JWT.StartsWith("Bearer ") ? input.JWT.Substring(7) : input.JWT;
+            //var validToken = _jwtValidator.ValidateToken(token);
+            //var userIdClaim = validToken.FindFirst("userId");
+            //if (userIdClaim == null)
+            //{
+            //    _logger.LogError("UserId claim not found");
+            //    return Unauthorized(new
+            //    {
+            //        status = "Error",
+            //        statusCode = 401,
+            //        message = "UserId Claim not found"
+            //    });
+            //}
+            var result = await _postCommand.RestorePost(backups);
+            return Ok(result);
         }
     }
 }

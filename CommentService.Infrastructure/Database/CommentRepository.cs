@@ -63,5 +63,17 @@ namespace CommentService.Infrastructure.Database
             }
             return comment;
         }
+
+        async Task<List<Comment>> ICommentRepository.GetCommentsByPostId(List<Guid> postIds)
+        {
+            var comments = await _db.Comments
+                .Where(c => postIds.Contains(c.PostId.GetValueOrDefault()))
+                .ToListAsync();
+            if (comments.Count == 0)
+            {
+                throw new KeyNotFoundException("Comments not found.");
+            }
+            return comments;
+        }
     }
 }

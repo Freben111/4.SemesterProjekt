@@ -16,5 +16,7 @@ namespace ForumService.Application.Interfaces
         Task<ForumResultMessage> UpdateForum(Guid forumId, UpdateForumDTO dto, Guid userId);
 
         Task<ForumResultMessage> DeleteForum(Guid forumId, Guid userId);
+
+        Task<ForumResultMessage> RestoreForum(ForumBackupDTO backup);
     }
 }

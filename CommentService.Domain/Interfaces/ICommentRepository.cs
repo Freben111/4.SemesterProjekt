@@ -7,6 +7,7 @@
         Task UpdateComment(Comment comment, uint rowVersion);
         Task DeleteComment(Comment comment, uint rowVersion);
         Task<Comment> GetCommentById(Guid id);
+        Task<List<Comment>> GetCommentsByPostId(List<Guid> postIds);
 
     }
 }
