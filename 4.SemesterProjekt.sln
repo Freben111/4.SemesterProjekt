@@ -13,9 +13,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yml = docker-compose.yml
 		Endpoints.http = Endpoints.http
-		pubsub.yaml = pubsub.yaml
-		statestore.yaml = statestore.yaml
-		subscription.yaml = subscription.yaml
+		Resources\pubsub.yaml = Resources\pubsub.yaml
+		Resources\statestore.yaml = Resources\statestore.yaml
+		Resources\subscription.yaml = Resources\subscription.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ForumService", "ForumService", "{237F03C2-D938-475A-8277-566C54DACD97}"

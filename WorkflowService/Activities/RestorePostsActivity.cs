@@ -21,7 +21,7 @@ namespace WorkflowService.Activities
             {
                 _logger.LogInformation("Restoring posts");
 
-                await _daprClient.PublishEventAsync("pubsub", "posts.restore", input.BackupPost);
+                await _daprClient.PublishEventAsync("blogpubsub", "posts.restore", input.BackupPost);
                 return null;
             }
             catch (Exception ex)

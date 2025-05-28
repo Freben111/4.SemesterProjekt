@@ -19,22 +19,22 @@ namespace WorkflowService.Workflows
             {
                 // Step 1: Delete the forum
                 await context.CallActivityAsync<DeleteForumWorkflowModel>(
-                    nameof(DeleteForumActivity), 
+                    nameof(DeleteForumActivity),
                     input);
 
-                deleteForumResult = await context.WaitForExternalEventAsync<ForumResultMessage>("Forum.Deleted");
+                deleteForumResult = await context.WaitForExternalEventAsync<ForumResultMessage>("ForumDeleted");
                 if (deleteForumResult.Status != "Forum Deleted")
                 {
                     throw new Exception($"Error deleting forum: {deleteForumResult.Error ?? "Unknown Error"}");
                 }
-                
+
 
                 // Step 2: Delete all posts in the forum
                 await context.CallActivityAsync<DeleteForumWorkflowModel>(
                     nameof(DeletePostsActivity),
                     input);
 
-                deletePostsResult = await context.WaitForExternalEventAsync<PostResultMessage>("Posts.Deleted");
+                deletePostsResult = await context.WaitForExternalEventAsync<PostResultMessage>("PostsDeleted");
                 if (deletePostsResult.Status != "Posts Deleted")
                 {
                     throw new Exception($"Error deleting posts: {deleteForumResult.Error ?? "Unknown Error"}");
@@ -50,7 +50,7 @@ namespace WorkflowService.Workflows
                     nameof(DeleteCommentsActivity),
                     input);
 
-                deleteCommentsResult = await context.WaitForExternalEventAsync<CommentResultMessage>("Comments.Deleted");
+                deleteCommentsResult = await context.WaitForExternalEventAsync<CommentResultMessage>("CommentsDeleted");
                 if (deleteCommentsResult.Status != "Comments Deleted")
                 {
                     throw new Exception($"Error deleting comments: {deleteForumResult.Error ?? "Unknown Error"}");

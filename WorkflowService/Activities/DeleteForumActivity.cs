@@ -22,9 +22,9 @@ namespace WorkflowService.Activities
             {
                 _logger.LogInformation("Deleting forum with id {ForumId}", input.ForumId);
 
-                var message = MessageHelper.ConvertToForum(input);
+                var message = MessageHelper.ConvertToForum(input, context.InstanceId);
 
-                await _daprClient.PublishEventAsync("pubsub", "forum.delete", message);
+                await _daprClient.PublishEventAsync("blogpubsub", "forum.delete", message);
                 return null;
             }
             catch (Exception ex)

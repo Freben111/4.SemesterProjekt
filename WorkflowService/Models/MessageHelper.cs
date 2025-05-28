@@ -8,30 +8,34 @@ namespace WorkflowService.Models
     public class MessageHelper
     {
 
-        public static ForumMessage ConvertToForum(DeleteForumWorkflowModel model)
+        public static ForumMessage ConvertToForum(DeleteForumWorkflowModel model, string workflowid)
         {
             return new ForumMessage()
             {
                 ForumId = model.ForumId.ToString(),
-                JWT = model.JWT
+                JWT = model.JWT,
+                WorkflowId = workflowid,
+
             };
         }
 
-        public static PostMessage ConvertToPost(DeleteForumWorkflowModel model)
+        public static PostMessage ConvertToPost(DeleteForumWorkflowModel model, string workflowid)
         {
             return new PostMessage()
             {
                 ForumId = model.ForumId,
-                JWT = model.JWT
+                JWT = model.JWT,
+                WorkflowId = workflowid,
             };
         }
 
-        public static CommentMessage ConvertToComment(DeleteForumWorkflowModel model)
+        public static CommentMessage ConvertToComment(DeleteForumWorkflowModel model, string workflowid)
         {
             return new CommentMessage()
             {
                 PostIds = model.PostIds,
-                JWT = model.JWT
+                JWT = model.JWT,
+                WorkflowId = workflowid
             };
 
         }

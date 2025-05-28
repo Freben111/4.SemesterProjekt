@@ -21,9 +21,9 @@ namespace WorkflowService.Activities
             {
                 _logger.LogInformation("Deleting posts associated with forum {ForumId}", input.ForumId);
 
-                var message = MessageHelper.ConvertToPost(input);
+                var message = MessageHelper.ConvertToPost(input, context.InstanceId);
 
-                await _daprClient.PublishEventAsync("pubsub", "posts.delete", message);
+                await _daprClient.PublishEventAsync("blogpubsub", "Posts.Delete", message);
                 return null;
             }
             catch (Exception ex)

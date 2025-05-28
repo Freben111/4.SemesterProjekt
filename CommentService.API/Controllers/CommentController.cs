@@ -10,7 +10,6 @@ using Shared.Forum;
 namespace CommentService.API.Controllers
 {
     [ApiController]
-    [Authorize]
     [Route("api/[controller]")]
     public class CommentController : ControllerBase
     {
@@ -32,6 +31,7 @@ namespace CommentService.API.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateComment([FromBody] CreateCommentDTO dto)
         {
 
@@ -73,6 +73,7 @@ namespace CommentService.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateComment(Guid id, [FromBody] UpdateCommentDTO dto)
         {
             _logger.LogInformation("Updating comment with id: {CommentId}", id);
@@ -94,6 +95,7 @@ namespace CommentService.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteComment(Guid id)
         {
             _logger.LogInformation("Deleting Comment with id: {CommentId}", id);
@@ -114,8 +116,9 @@ namespace CommentService.API.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        [HttpDelete]
-        [Topic("pubsub", "comments.delete")]
+        [HttpPost("post/workflow")]
+        [AllowAnonymous]
+        [Topic("blogpubsub", "Comments.Delete")]
         public async Task<IActionResult> DeleteCommentByPostId(CommentMessage input)
         {
             _logger.LogInformation("Deleting comments with from different posts");
@@ -147,8 +150,10 @@ namespace CommentService.API.Controllers
             }
             var userId = Guid.Parse(userIdClaim.Value);
             var result = await _commentCommand.DeleteCommentByPostIds(input.PostIds, userId);
+            result.JWT = input.JWT;
+            result.WorkflowId = input.WorkflowId;
 
-            await _daprClient.PublishEventAsync("pubsub", "Comments.Deleted", result);
+            await _daprClient.PublishEventAsync("blogpubsub", "Comments.Deleted", result);
 
             return Ok();
         }

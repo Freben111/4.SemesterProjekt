@@ -24,7 +24,7 @@ namespace CommentService.Infrastructure.Database
 
         async Task<CommentDTO> ICommentQuery.GetComment(Guid id)
         {
-            var cachedComment = await _daprClient.GetStateAsync<CommentDTO>("statestore", id.ToString());
+            var cachedComment = await _daprClient.GetStateAsync<CommentDTO>("blogstatestore", id.ToString());
             if (cachedComment != null)
             {
                 return cachedComment;

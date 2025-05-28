@@ -21,9 +21,9 @@ namespace WorkflowService.Activities
             {
                 _logger.LogInformation("Deleting forum with id {ForumId}", input.ForumId);
 
-                var message = MessageHelper.ConvertToComment(input);
+                var message = MessageHelper.ConvertToComment(input, context.InstanceId);
 
-                await _daprClient.PublishEventAsync("pubsub", "comments.delete", message);
+                await _daprClient.PublishEventAsync("blogpubsub", "Comments.Delete", message);
                 return null;
             }
             catch (Exception ex)

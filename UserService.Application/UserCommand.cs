@@ -40,7 +40,7 @@ namespace UserService.Application
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                var existingCachUser = _daprClient.GetStateAsync<UserStateModelCommand>("statestore", dto.UserName).Result;
+                var existingCachUser = _daprClient.GetStateAsync<UserStateModelCommand>("blogstatestore", dto.UserName).Result;
                 if (existingCachUser != null)
                 {
                     result.StatusCode = 409;
@@ -60,7 +60,7 @@ namespace UserService.Application
                 await _unitOfWork.CommitAsync();
 
                 var cachingUser = _userStateModel.Create(user);
-                await _daprClient.SaveStateAsync("statestore", user.Id.ToString(), cachingUser);
+                await _daprClient.SaveStateAsync("blog  ", user.Id.ToString(), cachingUser);
 
                 _logger.LogInformation("User {UserName} created successfully", dto.UserName);
                 result.UserName = user.UserName;
@@ -104,7 +104,7 @@ namespace UserService.Application
                 var token = _jwtService.GenerateToken(user.UserName, user.Id, user.role);
 
                 var cachUser = _userStateModel.Create(user);
-                await _daprClient.SaveStateAsync("statestore", user.Id.ToString(), cachUser);
+                await _daprClient.SaveStateAsync("blogstatestore", user.Id.ToString(), cachUser);
 
                 result.Token = token;
                 result.UserId = user.Id.ToString();
@@ -153,7 +153,7 @@ namespace UserService.Application
                 await _unitOfWork.CommitAsync();
 
                 var userStateModel = _userStateModel.Create(user);
-                await _daprClient.SaveStateAsync("statestore", user.Id.ToString(), userStateModel);
+                await _daprClient.SaveStateAsync("blogstatestore", user.Id.ToString(), userStateModel);
 
                 result.Status = "Updated";
                 result.UserName = user.UserName;
@@ -196,7 +196,7 @@ namespace UserService.Application
                 }
 
                 await _userRepository.DeleteUser(user, user.RowVersion);
-                await _daprClient.DeleteStateAsync("statestore", userId.ToString());
+                await _daprClient.DeleteStateAsync("blogstatestore", userId.ToString());
                 await _unitOfWork.CommitAsync();
 
                 _logger.LogInformation("User {UserId} deleted successfully", userId);

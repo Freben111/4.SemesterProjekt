@@ -101,25 +101,25 @@ namespace APIGateway.Controllers
             return StatusCode((int)response.StatusCode, responseContent);
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteForum(Guid id)
-        {
-            if (!AuthenticationHeaderValue.TryParse(Request.Headers.Authorization, out var authHeader))
-            {
-                return Unauthorized("Authorization header is missing");
-            }
+        //[HttpDelete("{id}")]
+        //public async Task<IActionResult> DeleteForum(Guid id)
+        //{
+        //    if (!AuthenticationHeaderValue.TryParse(Request.Headers.Authorization, out var authHeader))
+        //    {
+        //        return Unauthorized("Authorization header is missing");
+        //    }
 
-            var request = _dapr.CreateInvokeMethodRequest(
-                HttpMethod.Delete,
-                "forumservice",
-                $"api/forum/{id}");
+        //    var request = _dapr.CreateInvokeMethodRequest(
+        //        HttpMethod.Delete,
+        //        "forumservice",
+        //        $"api/forum/{id}");
 
-            request.Headers.Authorization = authHeader;
+        //    request.Headers.Authorization = authHeader;
 
-            var response = await _dapr.InvokeMethodWithResponseAsync(request);
-            var responseContent = await response.Content.ReadFromJsonAsync<object>();
+        //    var response = await _dapr.InvokeMethodWithResponseAsync(request);
+        //    var responseContent = await response.Content.ReadFromJsonAsync<object>();
 
-            return StatusCode((int)response.StatusCode, responseContent);
-        }
+        //    return StatusCode((int)response.StatusCode, responseContent);
+        //}
     }
 }

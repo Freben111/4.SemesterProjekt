@@ -24,7 +24,7 @@ namespace ForumService.Infrastructure.Database
 
         async Task<ForumDTO> IForumQuery.GetForum(Guid id)
         {
-            var cachedForum = await _daprClient.GetStateAsync<ForumDTO>("statestore", id.ToString());
+            var cachedForum = await _daprClient.GetStateAsync<ForumDTO>("blogstatestore", id.ToString());
             if (cachedForum != null)
             {
                 return cachedForum;

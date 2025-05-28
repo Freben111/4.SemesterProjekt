@@ -22,7 +22,7 @@ namespace WorkflowService.Activities
             {
                 _logger.LogInformation("Restoring forum with id {ForumId}", input.ForumId);
 
-                await _daprClient.PublishEventAsync("pubsub", "forum.restore", input.BackupForum);
+                await _daprClient.PublishEventAsync("blogpubsub", "forum.restore", input.BackupForum);
                 return null;
             }
             catch (Exception ex)

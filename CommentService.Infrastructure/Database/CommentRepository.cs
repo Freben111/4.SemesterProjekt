@@ -67,7 +67,7 @@ namespace CommentService.Infrastructure.Database
         async Task<List<Comment>> ICommentRepository.GetCommentsByPostId(List<Guid> postIds)
         {
             var comments = await _db.Comments
-                .Where(c => postIds.Contains(c.PostId.GetValueOrDefault()))
+                .Where(c => c.PostId.HasValue && postIds.Contains(c.PostId.Value))
                 .ToListAsync();
             if (comments.Count == 0)
             {

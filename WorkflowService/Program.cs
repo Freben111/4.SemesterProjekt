@@ -18,6 +18,7 @@ builder.Services.AddDaprWorkflow(options =>
 {
     // Register workflows
     options.RegisterWorkflow<ForumDeletionWorkflow>();
+    options.RegisterWorkflow<MinimalWorkflow>();
 
     // Register activities
     options.RegisterActivity<DeleteForumActivity>();
@@ -25,6 +26,7 @@ builder.Services.AddDaprWorkflow(options =>
     options.RegisterActivity<DeleteCommentsActivity>();
     options.RegisterActivity<RestoreForumActivity>();
     options.RegisterActivity<RestorePostsActivity>();
+    options.RegisterActivity<MinimalActivity>();
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -81,7 +83,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();

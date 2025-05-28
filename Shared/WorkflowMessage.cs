@@ -2,7 +2,7 @@
 {
     public abstract class WorkflowMessage
     {
-        public string WorkflowId { get; set; }
+        public string? WorkflowId { get; set; }
     }
 
     public class UserDto

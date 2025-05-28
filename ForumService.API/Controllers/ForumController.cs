@@ -5,12 +5,12 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Forum;
 using Shared.Forum.DTO_s;
+using Shared.Test;
 using System.Security.Claims;
 
 namespace ForumService.API.Controllers
 {
     [ApiController]
-    [Authorize]
     [Route("api/[controller]")]
     public class ForumController : ControllerBase
     {
@@ -32,9 +32,10 @@ namespace ForumService.API.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreateForum([FromBody] CreateForumDTO dto)
         {
-
+            
             _logger.LogInformation("Creating forum with name: {ForumName}", dto.Name);
             var userIdClaim = User.FindFirst("userId");
             if(userIdClaim == null)
@@ -55,7 +56,6 @@ namespace ForumService.API.Controllers
         }
 
         [HttpGet("{id}")]
-        [AllowAnonymous]
         public async Task<IActionResult> GetForum(Guid id)
         {
             try
@@ -72,7 +72,6 @@ namespace ForumService.API.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
         public async Task<IActionResult> GetAllForums()
         {
             try
@@ -88,6 +87,7 @@ namespace ForumService.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateForum(Guid id, [FromBody] UpdateForumDTO dto)
         {
             var userIdClaim = User.FindFirst("userId");
@@ -108,10 +108,18 @@ namespace ForumService.API.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        [HttpDelete("{id}")]
-        [Topic("pubsub", "forum.delete")]
-        public async Task<IActionResult> DeleteForum(ForumMessage input)
+        [HttpPost("workflow")]
+        [Topic("blogpubsub", "forum.delete")]
+        public async Task<IActionResult> DeleteForum([FromBody]ForumMessage input)
         {
+            _logger.LogInformation(input.ForumId, input.ForumName, input.OwnerId, input.WorkflowId, input.JWT);
+            if (Request.Headers.TryGetValue("ce-type", out var ceType) &&
+                ceType == "com.dapr.event.subscription.validation")
+            {
+                _logger.LogInformation("Dapr subscription validation event received, ignoring.");
+                return Ok();
+            }
+            _logger.LogInformation("Received request to delete forum with id: {ForumId}", input.ForumId);
             if (input.JWT == null)
             {
                 _logger.LogError("Token not found");
@@ -122,11 +130,12 @@ namespace ForumService.API.Controllers
                     message = "Token not found"
                 });
             }
+            _logger.LogInformation("Validating JWT token");
             var token = input.JWT.StartsWith("Bearer ") ? input.JWT.Substring(7) : input.JWT;
 
             var validToken = _jwtValidator.ValidateToken(token);
 
-            var userIdClaim = validToken.FindFirst("userId");
+            var userIdClaim = validToken?.FindFirst("userId");
             if (userIdClaim == null)
             {
                 _logger.LogError("UserId claim not found");
@@ -141,14 +150,15 @@ namespace ForumService.API.Controllers
 
             _logger.LogInformation("Deleting forum with id: {ForumId}", input.ForumId);
             var result = await _forumCommand.DeleteForum(Guid.Parse(input.ForumId), userId);
+            result.JWT = input.JWT;
+            result.WorkflowId = input.WorkflowId;
 
-            await _daprClient.PublishEventAsync("pubsub", "Forum.Deleted", result);
-
+            await _daprClient.PublishEventAsync("blogpubsub", "Forum.Deleted", result);
             return Ok();
         }
 
         [HttpPost("restore")]
-        [Topic("pubsub", "forum.restore")]
+        [Topic("blogpubsub", "forum.restore")]
         public async Task<IActionResult> RestoreForum(ForumBackupDTO backup)
         {
             //if (input.JWT == null)
@@ -177,7 +187,33 @@ namespace ForumService.API.Controllers
             //var userId = Guid.Parse(userIdClaim.Value);
             //_logger.LogInformation("Restoring forum with id: {ForumId}", input.ForumId);
             var result = await _forumCommand.RestoreForum(backup);
+
+            await _daprClient.PublishEventAsync("blogpubsub", "Forum.Restored", result);
+            
             return Ok(result);
+        }
+
+        [HttpPost("workflow/test")]
+        [Topic("blogpubsub", "Minimal.Forum.Test")]
+        [AllowAnonymous]
+        public async Task<IActionResult> WorkflowTest(MinimalWorkflowSharedModel input)
+        {
+            if (input.Message == null || string.IsNullOrEmpty(input.Message))
+            {
+                _logger.LogInformation("Received empty or test event, ignoring.");
+                return Ok();
+            }
+            _logger.LogInformation("ForumService workflow test, workflow message {message}", input.Message);
+            await Task.Delay(1000);
+
+            input.Message = "Forum Workflow test completed successfully";
+            _logger.LogInformation("Publishing workflow test completed message: {message}", input.Message);
+
+
+            await _daprClient.PublishEventAsync("blogpubsub", "Minimal.Test.PubSub.Return", input);
+            _logger.LogInformation("Workflow test completed with message: {message}", input.Message);
+            return Ok();
+
         }
     }
 }

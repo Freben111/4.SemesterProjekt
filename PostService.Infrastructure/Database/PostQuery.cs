@@ -24,7 +24,7 @@ namespace PostService.Infrastructure.Database
 
         async Task<PostDTO> IPostQuery.GetPost(Guid id)
         {
-            var cachedPost = await _daprClient.GetStateAsync<PostDTO>("statestore", id.ToString());
+            var cachedPost = await _daprClient.GetStateAsync<PostDTO>("blogstatestore", id.ToString());
             if (cachedPost != null)
             {
                 return cachedPost;

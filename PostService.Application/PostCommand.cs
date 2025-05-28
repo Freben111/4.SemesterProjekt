@@ -42,7 +42,7 @@ namespace PostService.Application
                 await _unitOfWork.CommitAsync();
 
                 var postState = _postStateModel.Create(post);
-                await _daprClient.SaveStateAsync("statestore", post.Id.ToString(), postState);
+                await _daprClient.SaveStateAsync("blogstatestore", post.Id.ToString(), postState);
 
 
                 result.PostId = post.Id.ToString();
@@ -92,7 +92,7 @@ namespace PostService.Application
                 await _unitOfWork.CommitAsync();
 
                 var postState = _postStateModel.Create(post);
-                await _daprClient.SaveStateAsync("statestore", post.Id.ToString(), postState);
+                await _daprClient.SaveStateAsync("blogstatestore", post.Id.ToString(), postState);
 
                 result.PostId = post.Id.ToString();
                 result.PostName = dto.Title;
@@ -151,7 +151,7 @@ namespace PostService.Application
                 await _postRepository.DeletePost(post, post.RowVersion);
                 await _unitOfWork.CommitAsync();
 
-                await _daprClient.DeleteStateAsync("statestore", postId.ToString());
+                await _daprClient.DeleteStateAsync("blogstatestore", postId.ToString());
 
 
                 result.PostId = post.Id.ToString();
@@ -210,7 +210,7 @@ namespace PostService.Application
                 await _unitOfWork.CommitAsync();
                 foreach (var post in posts)
                 {
-                    await _daprClient.DeleteStateAsync("statestore", post.Id.ToString());
+                    await _daprClient.DeleteStateAsync("blogstatestore", post.Id.ToString());
                 }
                 result.ForumId = forumId;
                 result.Status = "Posts Deleted";
@@ -242,7 +242,7 @@ namespace PostService.Application
                     var post = Post.RestorePost(backup.Id, backup.Title, backup.Content, backup.CreatedAt, backup.UpdatedAt, backup.ForumId, backup.AuthorId);
                     await _postRepository.CreatePost(post);
                     var postState = _postStateModel.Create(post);
-                    await _daprClient.SaveStateAsync("statestore", post.Id.ToString(), postState);
+                    await _daprClient.SaveStateAsync("blogstatestore", post.Id.ToString(), postState);
                 }
 
                 await _unitOfWork.CommitAsync();

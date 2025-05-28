@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Shared.Comment.DTO_s;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using static Google.Rpc.Context.AttributeContext.Types;
 
 namespace APIGateway.Controllers
 {
@@ -81,12 +82,25 @@ namespace APIGateway.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteComment(Guid id)
         {
-            var result = await _dapr.InvokeMethodAsync<object>(
+            if (!AuthenticationHeaderValue.TryParse(Request.Headers.Authorization, out var authHeader))
+            {
+                return Unauthorized("Authorization header is missing");
+            }
+            var request = _dapr.CreateInvokeMethodRequest(
                 HttpMethod.Delete,
                 "commentservice",
-                $"api/comment/{id}"
-            );
-            return Ok(result);
+                $"api/comment/{id}");
+
+            request.Headers.Authorization = authHeader;
+
+            //sætter content til at være json og sætter content type til application/json
+
+            var response = await _dapr.InvokeMethodWithResponseAsync(request);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<object>();
+
+            return StatusCode((int)response.StatusCode, responseContent);
+
         }
     }
 }

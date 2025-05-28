@@ -41,7 +41,7 @@ namespace CommentService.Application
                 await _unitOfWork.CommitAsync();
 
                 var commentState = _commentStateModel.Create(comment);
-                await _daprClient.SaveStateAsync("statestore", comment.Id.ToString(), commentState);
+                await _daprClient.SaveStateAsync("blogstatestore", comment.Id.ToString(), commentState);
 
                 result.CommentId = comment.Id.ToString();
                 result.Status = "Created";
@@ -91,7 +91,7 @@ namespace CommentService.Application
                 await _unitOfWork.CommitAsync();
 
                 var commentState = _commentStateModel.Create(comment);
-                await _daprClient.SaveStateAsync("statestore", comment.Id.ToString(), comment);
+                await _daprClient.SaveStateAsync("blogstatestore", comment.Id.ToString(), comment);
 
                 result.CommentId = comment.Id.ToString();
                 result.Status = "Updated";
@@ -138,7 +138,7 @@ namespace CommentService.Application
                 await _commentRepository.DeleteComment(comment, comment.RowVersion);
                 await _unitOfWork.CommitAsync();
 
-                await _daprClient.DeleteStateAsync("statestore", commentId.ToString());
+                await _daprClient.DeleteStateAsync("blogstatestore", commentId.ToString());
 
                 result.CommentId = comment.Id.ToString();
                 result.Status = "Deleted";
@@ -180,7 +180,7 @@ namespace CommentService.Application
                 foreach (var comment in comments)
                 {
                     await _commentRepository.DeleteComment(comment, comment.RowVersion);
-                    await _daprClient.DeleteStateAsync("statestore", comment.Id.ToString());
+                    await _daprClient.DeleteStateAsync("blogstatestore", comment.Id.ToString());
                 }
                 await _unitOfWork.CommitAsync();
 

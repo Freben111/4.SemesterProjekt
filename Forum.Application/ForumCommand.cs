@@ -41,7 +41,7 @@ namespace ForumService.Application
                 await _unitOfWork.CommitAsync();
 
                 var forumState = _forumState.Create(forum);
-                await _daprClient.SaveStateAsync("statestore", forum.Id.ToString(), forumState);
+                await _daprClient.SaveStateAsync("blogstatestore", forum.Id.ToString(), forumState);
 
                 result.ForumId = forum.Id.ToString();
                 result.ForumName = dto.Name;
@@ -91,7 +91,7 @@ namespace ForumService.Application
                 await _unitOfWork.CommitAsync();
 
                 var cachedForum = _forumState.Create(forum);
-                await _daprClient.SaveStateAsync("statestore", forum.Id.ToString(), cachedForum);
+                await _daprClient.SaveStateAsync("blogstatestore", forum.Id.ToString(), cachedForum);
 
                 result.ForumId = forum.Id.ToString();
                 result.ForumName = dto.Name;
@@ -150,7 +150,7 @@ namespace ForumService.Application
                 await _forumRepository.DeleteForum(forum, forum.RowVersion);
                 await _unitOfWork.CommitAsync();
 
-                await _daprClient.DeleteStateAsync("statestore", forumId.ToString());
+                await _daprClient.DeleteStateAsync("blogstatestore", forumId.ToString());
 
                 result.ForumId = forum.Id.ToString();
                 result.ForumName = forum.Name;
@@ -188,7 +188,7 @@ namespace ForumService.Application
                 await _unitOfWork.CommitAsync();
 
                 var cachedForum = _forumState.Create(forum);
-                await _daprClient.SaveStateAsync("statestore", forum.Id.ToString(), cachedForum);
+                await _daprClient.SaveStateAsync("blogstatestore", forum.Id.ToString(), cachedForum);
 
                 result.ForumId = forum.Id.ToString();
                 result.ForumName = backup.Name;

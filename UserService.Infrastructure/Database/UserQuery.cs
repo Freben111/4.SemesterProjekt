@@ -30,7 +30,7 @@ namespace UserService.Infrastructure.Database
             _logger.LogInformation("Getting user with id: {Id}", id);
             try
             {
-                var cachedUser = await _daprClient.GetStateAsync<UserDTO>("statestore", id.ToString());
+                var cachedUser = await _daprClient.GetStateAsync<UserDTO>("blogstatestore", id.ToString());
                 if (cachedUser != null)
                 {
                     _logger.LogInformation("User with id: {Id} found in cache", id);

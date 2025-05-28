@@ -3,16 +3,19 @@ using CommunityToolkit.Aspire.Hosting.Dapr;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var statestore = builder.AddDaprStateStore("statestore");
-var pubsubComponent = builder.AddDaprPubSub("pubsub");
+var resourcesPath = "../Resources";
+//var statestore = builder.AddDaprStateStore("blogstatestore");
+//var pubsubComponent = builder.AddDaprPubSub("blogpubsub");
 
 builder.AddProject<Projects.APIGateway>("apigateway")
     .WithDaprSidecar(new DaprSidecarOptions
     {
         AppId = "apigateway",
         DaprHttpPort = 3501,
-    }).WithReference(pubsubComponent)
-    .WithReference(statestore);
+        ResourcesPaths = [resourcesPath]
+    });
+//.WithReference(pubsubComponent)
+//.WithReference(statestore);
 
 
 builder.AddProject<Projects.ForumService_API>("forumservice-api")
@@ -20,8 +23,8 @@ builder.AddProject<Projects.ForumService_API>("forumservice-api")
     {
         AppId = "forumservice",
         DaprHttpPort = 3502,
-    }).WithReference(pubsubComponent)
-    .WithReference(statestore);
+        ResourcesPaths = [resourcesPath]
+    });
 
 
 
@@ -30,8 +33,8 @@ builder.AddProject<Projects.PostService_API>("postservice-api")
     {
         AppId = "postservice",
         DaprHttpPort = 3503,
-    }).WithReference(pubsubComponent)
-    .WithReference(statestore);
+        ResourcesPaths = [resourcesPath]
+    });
 
 
 
@@ -40,8 +43,8 @@ builder.AddProject<Projects.CommentService_API>("commentservice-api")
     {
         AppId = "commentservice",
         DaprHttpPort = 3504,
-    }).WithReference(pubsubComponent)
-    .WithReference(statestore);
+        ResourcesPaths = [resourcesPath]
+    });
 
 
 
@@ -50,8 +53,8 @@ builder.AddProject<Projects.UserService_API>("user-api")
     {
         AppId = "userservice",
         DaprHttpPort = 3505,
-    }).WithReference(pubsubComponent)
-    .WithReference(statestore);
+        ResourcesPaths = [resourcesPath]
+    });
 
 
 
@@ -60,8 +63,8 @@ builder.AddProject<Projects.WorkflowService>("workflowservice")
     {
         AppId = "workflowservice",
         DaprHttpPort = 3506,
-    }).WithReference(pubsubComponent)
-    .WithReference(statestore);
+        ResourcesPaths = [resourcesPath]
+    });
 
 
 

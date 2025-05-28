@@ -5,6 +5,7 @@ using Shared.Post;
 using Dapr;
 using Shared.Forum;
 using Dapr.Client;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PostService.API.Controllers
 {
@@ -30,6 +31,7 @@ namespace PostService.API.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> CreatePost([FromBody] CreatePostDTO dto)
         {
             _logger.LogInformation("Creating post with name: {PostTitle}", dto.Title);
@@ -69,6 +71,7 @@ namespace PostService.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdatePost(Guid id, [FromBody] UpdatePostDTO dto)
         {
             _logger.LogInformation("Updating post with id: {PostId}", id);
@@ -110,8 +113,8 @@ namespace PostService.API.Controllers
             return StatusCode(result.StatusCode, result);
         }
 
-        [HttpDelete("forum/{id}")]
-        [Topic("pubsub", "posts.delete")]
+        [HttpPost("forum/workflow")]
+        [Topic("blogpubsub", "Posts.Delete")]
         public async Task<IActionResult> DeletePostsFromForum(PostMessage input)
         {
             _logger.LogInformation("Deleting post with forumid: {forumId}", input.ForumId);
@@ -145,13 +148,16 @@ namespace PostService.API.Controllers
 
             var userId = Guid.Parse(userIdClaim.Value);
             var result = await _postCommand.DeletePostFromForum(input.ForumId ?? Guid.Empty, userId);
+            result.JWT = input.JWT;
+            result.WorkflowId = input.WorkflowId;
 
-            await _daprClient.PublishEventAsync("pubsub", "Posts.Deleted", result);
+            await _daprClient.PublishEventAsync("blogpubsub", "Posts.Deleted", result);
 
             return Ok();
         }
+
         [HttpPost("restore")]
-        [Topic("pubsub", "posts.restore")]
+        [Topic("blogpubsub", "posts.restore")]
         public async Task<IActionResult> RestorePostsFromForum(List<PostBackupDTO> backups)
         {
             //_logger.LogInformation("Restoring posts with forumid: {forumId}", input.ForumId);
